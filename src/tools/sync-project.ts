@@ -89,7 +89,16 @@ export function registerSyncProjectTool(
       try {
         const raw = await client.getProjectYamls(projectId);
         const decoded = decodeProjectYamlResponse(raw);
-        const syncedFiles = await cacheWriteBulk(projectId, decoded);
+
+        // ZIP entry names include .yaml extension, but cacheWrite adds it too.
+        // Strip .yaml from keys to avoid double extension (.yaml.yaml).
+        const normalized: Record<string, string> = {};
+        for (const [key, content] of Object.entries(decoded)) {
+          const cleanKey = key.endsWith(".yaml") ? key.slice(0, -".yaml".length) : key;
+          normalized[cleanKey] = content;
+        }
+
+        const syncedFiles = await cacheWriteBulk(projectId, normalized);
 
         const meta: CacheMeta = {
           lastSyncedAt: new Date().toISOString(),

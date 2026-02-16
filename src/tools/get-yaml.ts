@@ -39,9 +39,10 @@ export function registerGetYamlTool(
       const raw = await client.getProjectYamls(projectId, fileName);
       const decoded = decodeProjectYamlResponse(raw);
 
-      // Write fetched results to cache
+      // Write fetched results to cache (strip .yaml from ZIP entry names to avoid double extension)
       for (const [name, yaml] of Object.entries(decoded)) {
-        await cacheWrite(projectId, name, yaml);
+        const cleanName = name.endsWith(".yaml") ? name.slice(0, -".yaml".length) : name;
+        await cacheWrite(projectId, cleanName, yaml);
       }
 
       const entries = Object.entries(decoded);
