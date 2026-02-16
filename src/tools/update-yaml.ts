@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FlutterFlowClient } from "../api/flutterflow.js";
+import { cacheWrite } from "../utils/cache.js";
 
 export function registerUpdateYamlTool(
   server: McpServer,
@@ -22,6 +23,12 @@ export function registerUpdateYamlTool(
         projectId,
         fileKeyToContent
       );
+
+      // Update cache with the pushed content
+      for (const [fileKey, content] of Object.entries(fileKeyToContent)) {
+        await cacheWrite(projectId, fileKey, content);
+      }
+
       return {
         content: [
           {
