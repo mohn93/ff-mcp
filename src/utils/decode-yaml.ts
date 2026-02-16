@@ -4,19 +4,20 @@ import AdmZip from "adm-zip";
  * Decode the base64-encoded ZIP returned by the FlutterFlow projectYamls API
  * into a map of filename → YAML text.
  *
- * The API response shape is: { value: { project_yaml_bytes: "<base64>" } }
+ * The API response shape is: { value: { projectYamlBytes: "<base64>" } }
  */
 export function decodeProjectYamlResponse(
   apiResponse: unknown
 ): Record<string, string> {
   const resp = apiResponse as {
-    value?: { project_yaml_bytes?: string };
+    value?: { projectYamlBytes?: string; project_yaml_bytes?: string };
   };
 
-  const b64 = resp?.value?.project_yaml_bytes;
+  // API docs use camelCase (projectYamlBytes), but handle snake_case fallback
+  const b64 = resp?.value?.projectYamlBytes ?? resp?.value?.project_yaml_bytes;
   if (!b64) {
     throw new Error(
-      "Unexpected API response: missing value.project_yaml_bytes"
+      "Unexpected API response: missing value.projectYamlBytes"
     );
   }
 
