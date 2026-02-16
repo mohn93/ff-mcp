@@ -40,7 +40,7 @@ export class FlutterFlowClient {
   ): Promise<unknown> {
     return this.request("POST", "/l/listProjects", {
       project_type: projectType,
-      deserialize_response: deserializeResponse ?? false,
+      deserialize_response: deserializeResponse ?? true,
     });
   }
 
