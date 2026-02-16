@@ -12,14 +12,17 @@ import {
 import { fetchOneFile } from "./list-pages.js";
 
 /**
- * Extract all file keys from the listPartitionedFileNames response.
- * Handles both snake_case and camelCase variants.
+ * Extract top-level file keys from the listPartitionedFileNames response.
+ * Filters out deeply nested sub-files (widget nodes, etc.) that can't be
+ * fetched individually and would hammer the API with thousands of requests.
+ * Top-level keys have at most 2 path segments (e.g. "page/id-Scaffold_xxx").
  */
-function extractAllFileKeys(fileNamesRaw: unknown): string[] {
+function extractTopLevelFileKeys(fileNamesRaw: unknown): string[] {
   const raw = fileNamesRaw as {
     value?: { file_names?: string[]; fileNames?: string[] };
   };
-  return raw?.value?.file_names ?? raw?.value?.fileNames ?? [];
+  const allKeys = raw?.value?.file_names ?? raw?.value?.fileNames ?? [];
+  return allKeys.filter((key) => key.split("/").length <= 2);
 }
 
 /**
@@ -113,13 +116,17 @@ export function registerSyncProjectTool(
             },
           ],
         };
-      } catch {
-        // Bulk fetch failed — fall through to batched approach
+      } catch (err) {
+        // Bulk fetch failed — log and fall through to batched approach
+        console.error(
+          `[sync_project] Bulk fetch failed, falling back to batched:`,
+          err instanceof Error ? err.message : err
+        );
       }
 
       // Fallback path: list all file keys, then batch-fetch 5 at a time
       const fileNamesRaw = await client.listPartitionedFileNames(projectId);
-      const allKeys = extractAllFileKeys(fileNamesRaw);
+      const allKeys = extractTopLevelFileKeys(fileNamesRaw);
 
       if (allKeys.length === 0) {
         return {

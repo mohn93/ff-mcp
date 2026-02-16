@@ -27,7 +27,12 @@ export function decodeProjectYamlResponse(
   const result: Record<string, string> = {};
   for (const entry of entries) {
     if (!entry.isDirectory) {
-      result[entry.entryName] = entry.getData().toString("utf-8");
+      try {
+        result[entry.entryName] = entry.getData().toString("utf-8");
+      } catch {
+        // Skip entries that fail to decompress (e.g. buffer overflow on large pages)
+        console.error(`[decode-yaml] Failed to decompress entry: ${entry.entryName}`);
+      }
     }
   }
 
