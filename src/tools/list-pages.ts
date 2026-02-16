@@ -3,6 +3,7 @@ import { z } from "zod";
 import { FlutterFlowClient } from "../api/flutterflow.js";
 import { decodeProjectYamlResponse } from "../utils/decode-yaml.js";
 import { parseFolderMapping } from "../utils/parse-folders.js";
+import { cacheRead, cacheWrite } from "../utils/cache.js";
 
 export interface PageInfo {
   scaffoldId: string;
@@ -32,11 +33,19 @@ export async function fetchOneFile(
   projectId: string,
   fileName: string
 ): Promise<{ fileKey: string; content: string } | null> {
+  // Check cache first
+  const cached = await cacheRead(projectId, fileName);
+  if (cached) {
+    return { fileKey: fileName, content: cached };
+  }
+
   try {
     const raw = await client.getProjectYamls(projectId, fileName);
     const decoded = decodeProjectYamlResponse(raw);
     const entries = Object.entries(decoded);
     if (entries.length > 0) {
+      // Write to cache on fetch
+      await cacheWrite(projectId, fileName, entries[0][1]);
       return { fileKey: fileName, content: entries[0][1] };
     }
     return null;

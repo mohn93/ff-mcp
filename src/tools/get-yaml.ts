@@ -2,6 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FlutterFlowClient } from "../api/flutterflow.js";
 import { decodeProjectYamlResponse } from "../utils/decode-yaml.js";
+import { cacheRead, cacheWrite } from "../utils/cache.js";
 
 export function registerGetYamlTool(
   server: McpServer,
@@ -20,19 +21,34 @@ export function registerGetYamlTool(
         ),
     },
     async ({ projectId, fileName }) => {
+      // Cache-first for single-file requests
+      if (fileName) {
+        const cached = await cacheRead(projectId, fileName);
+        if (cached) {
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: `# ${fileName} (cached)\n${cached}`,
+              },
+            ],
+          };
+        }
+      }
+
       const raw = await client.getProjectYamls(projectId, fileName);
       const decoded = decodeProjectYamlResponse(raw);
+
+      // Write fetched results to cache
+      for (const [name, yaml] of Object.entries(decoded)) {
+        await cacheWrite(projectId, name, yaml);
+      }
 
       const entries = Object.entries(decoded);
       if (entries.length === 1) {
         const [name, yaml] = entries[0];
         return {
-          content: [
-            {
-              type: "text" as const,
-              text: `# ${name}\n${yaml}`,
-            },
-          ],
+          content: [{ type: "text" as const, text: `# ${name}\n${yaml}` }],
         };
       }
 
