@@ -15,8 +15,7 @@ export interface CacheMeta {
 // Project root resolution
 // ---------------------------------------------------------------------------
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /** Project root: two levels up from src/utils/ */
 const PROJECT_ROOT = resolve(__dirname, "..", "..");
@@ -165,7 +164,7 @@ export async function listCachedKeys(
   const keys: string[] = [];
 
   try {
-    await walkDir(root, root, keys);
+    await walkDir(root, root, keys, ".yaml");
   } catch (err: unknown) {
     if (isNodeError(err) && err.code === "ENOENT") {
       return []; // cache dir doesn't exist yet
@@ -173,9 +172,7 @@ export async function listCachedKeys(
     throw err;
   }
 
-  const yamlKeys = keys
-    .filter((k) => k.endsWith(".yaml"))
-    .map((k) => k.slice(0, -".yaml".length));
+  const yamlKeys = keys.map((k) => k.slice(0, -".yaml".length));
 
   if (prefix) {
     return yamlKeys.filter((k) => k.startsWith(prefix));
@@ -193,14 +190,16 @@ export async function listCachedKeys(
 async function walkDir(
   base: string,
   dir: string,
-  out: string[]
+  out: string[],
+  ext?: string
 ): Promise<void> {
   const entries = await readdir(dir, { withFileTypes: true });
   for (const entry of entries) {
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
-      await walkDir(base, full, out);
+      await walkDir(base, full, out, ext);
     } else if (entry.isFile()) {
+      if (ext && !entry.name.endsWith(ext)) continue;
       // Relative path from cache root, using forward slashes for consistency
       const rel = full.slice(base.length + 1).split("\\").join("/");
       out.push(rel);
