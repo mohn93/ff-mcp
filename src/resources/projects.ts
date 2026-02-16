@@ -3,6 +3,7 @@ import {
   ResourceTemplate,
 } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { FlutterFlowClient } from "../api/flutterflow.js";
+import { decodeProjectYamlResponse } from "../utils/decode-yaml.js";
 
 export function registerResources(
   server: McpServer,
@@ -67,15 +68,19 @@ export function registerResources(
       mimeType: "text/yaml",
     },
     async (uri, { projectId, fileName }) => {
-      const yaml = await client.getProjectYamls(
+      const raw = await client.getProjectYamls(
         projectId as string,
         fileName as string
       );
+      const decoded = decodeProjectYamlResponse(raw);
+      const yamlText = Object.entries(decoded)
+        .map(([name, content]) => `# ${name}\n${content}`)
+        .join("\n");
       return {
         contents: [
           {
             uri: uri.href,
-            text: JSON.stringify(yaml, null, 2),
+            text: yamlText,
             mimeType: "text/yaml",
           },
         ],

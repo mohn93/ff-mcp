@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FlutterFlowClient } from "../api/flutterflow.js";
+import { decodeProjectYamlResponse } from "../utils/decode-yaml.js";
 
 export function registerGetYamlTool(
   server: McpServer,
@@ -19,14 +20,27 @@ export function registerGetYamlTool(
         ),
     },
     async ({ projectId, fileName }) => {
-      const result = await client.getProjectYamls(projectId, fileName);
+      const raw = await client.getProjectYamls(projectId, fileName);
+      const decoded = decodeProjectYamlResponse(raw);
+
+      const entries = Object.entries(decoded);
+      if (entries.length === 1) {
+        const [name, yaml] = entries[0];
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `# ${name}\n${yaml}`,
+            },
+          ],
+        };
+      }
+
       return {
-        content: [
-          {
-            type: "text" as const,
-            text: JSON.stringify(result, null, 2),
-          },
-        ],
+        content: entries.map(([name, yaml]) => ({
+          type: "text" as const,
+          text: `# ${name}\n${yaml}`,
+        })),
       };
     }
   );

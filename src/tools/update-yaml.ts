@@ -14,7 +14,7 @@ export function registerUpdateYamlTool(
       fileKeyToContent: z
         .record(z.string(), z.string())
         .describe(
-          "Map of file keys to YAML content. Each value must be a single-line string with escaped newlines (\\n)."
+          "Map of file keys to YAML content. Pass each value as a normal multi-line YAML string."
         ),
     },
     async ({ projectId, fileKeyToContent }) => {

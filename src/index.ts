@@ -8,10 +8,13 @@ import { registerListFilesTool } from "./tools/list-files.js";
 import { registerGetYamlTool } from "./tools/get-yaml.js";
 import { registerValidateYamlTool } from "./tools/validate-yaml.js";
 import { registerUpdateYamlTool } from "./tools/update-yaml.js";
+import { registerListPagesTool } from "./tools/list-pages.js";
+import { registerGetPageByNameTool } from "./tools/get-page-by-name.js";
 import { registerResources } from "./resources/projects.js";
 import { registerGeneratePagePrompt } from "./prompts/generate-page.js";
 import { registerModifyComponentPrompt } from "./prompts/modify-component.js";
 import { registerInspectProjectPrompt } from "./prompts/inspect-project.js";
+import { registerDevWorkflowPrompt } from "./prompts/dev-workflow.js";
 
 const server = new McpServer({
   name: "ff-mcp",
@@ -26,6 +29,8 @@ registerListFilesTool(server, client);
 registerGetYamlTool(server, client);
 registerValidateYamlTool(server, client);
 registerUpdateYamlTool(server, client);
+registerListPagesTool(server, client);
+registerGetPageByNameTool(server, client);
 
 // Register resources
 registerResources(server, client);
@@ -34,6 +39,7 @@ registerResources(server, client);
 registerGeneratePagePrompt(server);
 registerModifyComponentPrompt(server);
 registerInspectProjectPrompt(server);
+registerDevWorkflowPrompt(server);
 
 // Start server
 const transport = new StdioServerTransport();

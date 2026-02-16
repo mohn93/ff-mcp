@@ -17,7 +17,7 @@ export function registerValidateYamlTool(
       fileContent: z
         .string()
         .describe(
-          "The YAML content to validate. Must be a single-line string with escaped newlines (\\n)."
+          "Pass YAML content as a normal multi-line string."
         ),
     },
     async ({ projectId, fileKey, fileContent }) => {
