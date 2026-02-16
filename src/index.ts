@@ -10,6 +10,7 @@ import { registerValidateYamlTool } from "./tools/validate-yaml.js";
 import { registerUpdateYamlTool } from "./tools/update-yaml.js";
 import { registerListPagesTool } from "./tools/list-pages.js";
 import { registerGetPageByNameTool } from "./tools/get-page-by-name.js";
+import { registerSyncProjectTool } from "./tools/sync-project.js";
 import { registerResources } from "./resources/projects.js";
 import { registerGeneratePagePrompt } from "./prompts/generate-page.js";
 import { registerModifyComponentPrompt } from "./prompts/modify-component.js";
@@ -31,6 +32,7 @@ registerValidateYamlTool(server, client);
 registerUpdateYamlTool(server, client);
 registerListPagesTool(server, client);
 registerGetPageByNameTool(server, client);
+registerSyncProjectTool(server, client);
 
 // Register resources
 registerResources(server, client);
