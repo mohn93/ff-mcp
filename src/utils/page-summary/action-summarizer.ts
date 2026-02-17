@@ -66,10 +66,58 @@ function collectActionKeys(node: Record<string, unknown>): string[] {
   return keys;
 }
 
+/** Known top-level keys that identify an action type. */
+const ACTION_TYPE_KEYS = [
+  "navigate", "customAction", "database", "localStateUpdate", "waitAction",
+  "alertDialog", "bottomSheet", "revenueCat", "auth", "rebuild", "scrollTo",
+  "copyToClipboard", "share", "hapticFeedback",
+] as const;
+
+/**
+ * Recursively search an object tree for the first recognizable action.
+ * Used to unwrap disableAction nodes where the real action is buried
+ * inside conditionalActions or other nesting.
+ */
+function findDeepAction(obj: unknown, depth = 0): ActionSummary | null {
+  if (!obj || typeof obj !== "object" || depth > 8) return null;
+  const o = obj as Record<string, unknown>;
+
+  // Check if this object itself is a classifiable action
+  for (const key of ACTION_TYPE_KEYS) {
+    if (key in o) return classifyAction(o);
+  }
+
+  // Recurse into object values
+  for (const val of Object.values(o)) {
+    if (val && typeof val === "object") {
+      const found = findDeepAction(val, depth + 1);
+      if (found) return found;
+    }
+  }
+
+  return null;
+}
+
 /**
  * Classify an action YAML into a human-readable summary.
  */
 function classifyAction(doc: Record<string, unknown>): ActionSummary {
+  // Disabled action — unwrap and recursively find the inner action
+  if ("disableAction" in doc) {
+    const da = doc.disableAction as Record<string, unknown>;
+    const actionNode = da.actionNode as Record<string, unknown> | undefined;
+    if (actionNode) {
+      const inner = findDeepAction(actionNode);
+      if (inner) {
+        return {
+          type: `[DISABLED] ${inner.type}`,
+          detail: inner.detail,
+        };
+      }
+    }
+    return { type: "[DISABLED]", detail: "" };
+  }
+
   // Navigate
   if ("navigate" in doc) {
     const nav = doc.navigate as Record<string, unknown>;
@@ -146,6 +194,13 @@ function classifyAction(doc: Record<string, unknown>): ActionSummary {
     const rc = doc.revenueCat as Record<string, unknown>;
     if ("purchase" in rc) return { type: "revenueCat", detail: "purchase" };
     if ("restore" in rc) return { type: "revenueCat", detail: "restore" };
+    if ("paywall" in rc) {
+      const pw = rc.paywall as Record<string, unknown>;
+      const eid = pw.entitlementId as Record<string, unknown> | undefined;
+      const iv = eid?.inputValue as Record<string, unknown> | undefined;
+      const name = (iv?.serializedValue as string) || "";
+      return { type: "revenueCat", detail: name ? `paywall (${name})` : "paywall" };
+    }
     return { type: "revenueCat", detail: "" };
   }
 
