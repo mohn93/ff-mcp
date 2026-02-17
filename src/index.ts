@@ -11,6 +11,7 @@ import { registerUpdateYamlTool } from "./tools/update-yaml.js";
 import { registerListPagesTool } from "./tools/list-pages.js";
 import { registerGetPageByNameTool } from "./tools/get-page-by-name.js";
 import { registerSyncProjectTool } from "./tools/sync-project.js";
+import { registerGetPageSummaryTool } from "./tools/get-page-summary.js";
 import { registerResources } from "./resources/projects.js";
 import { registerGeneratePagePrompt } from "./prompts/generate-page.js";
 import { registerModifyComponentPrompt } from "./prompts/modify-component.js";
@@ -33,6 +34,7 @@ registerUpdateYamlTool(server, client);
 registerListPagesTool(server, client);
 registerGetPageByNameTool(server, client);
 registerSyncProjectTool(server, client);
+registerGetPageSummaryTool(server);
 
 // Register resources
 registerResources(server, client);
