@@ -1,42 +1,58 @@
-# ff-mcp
+# flutterflow-mcp
 
 MCP server for the FlutterFlow Project API. Enables AI-assisted FlutterFlow development through Claude and other MCP-compatible clients.
 
-## Setup
+## Quick Start
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
+### 1. Get your FlutterFlow API token
 
-2. Build:
-   ```bash
-   npm run build
-   ```
+Go to **FlutterFlow > Account Settings > API Token** and copy your token.
 
-3. Set your FlutterFlow API token:
-   ```bash
-   export FLUTTERFLOW_API_TOKEN=your_token_here
-   ```
-   Get your token from FlutterFlow > Account Settings > API Token.
+### 2. Add to your MCP client
 
-## Usage with Claude Code
+**Claude Code:**
 
-Add to your Claude Code MCP config:
+```bash
+claude mcp add flutterflow -- npx -y flutterflow-mcp
+```
+
+Then set your token in the MCP config (`~/.claude/settings.json` or project `.claude/settings.json`):
 
 ```json
 {
   "mcpServers": {
     "flutterflow": {
-      "command": "node",
-      "args": ["/path/to/ff_mcp/build/index.js"],
+      "command": "npx",
+      "args": ["-y", "flutterflow-mcp"],
       "env": {
-        "FLUTTERFLOW_API_TOKEN": "your_token"
+        "FLUTTERFLOW_API_TOKEN": "your_token_here"
       }
     }
   }
 }
 ```
+
+**Other MCP clients (Cursor, Windsurf, etc.):**
+
+Add to your MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "flutterflow": {
+      "command": "npx",
+      "args": ["-y", "flutterflow-mcp"],
+      "env": {
+        "FLUTTERFLOW_API_TOKEN": "your_token_here"
+      }
+    }
+  }
+}
+```
+
+### 3. Start building
+
+Ask your AI assistant to list your FlutterFlow projects, inspect pages, or modify widgets — it handles the rest.
 
 ## Tools
 
@@ -72,19 +88,37 @@ Add to your Claude Code MCP config:
 | `inspect-project` | Summarize project structure |
 | `flutterflow-dev-workflow` | Efficient workflow guide for AI-assisted FlutterFlow development |
 
-## Documentation
+## Built-in YAML Reference
 
-- **[docs/ff-yaml/](docs/ff-yaml/)** — Complete FlutterFlow YAML reference catalog for AI agents (widget schemas, actions, variables, theming, editing workflows)
+This MCP ships with a comprehensive FlutterFlow YAML reference catalog that AI models can access at runtime:
+
+- **`get_yaml_docs` tool** — Search by topic (e.g. `get_yaml_docs(topic: "Button")`) or browse the full index
+- **`ff://docs` resources** — Direct access to all 21 reference docs covering widgets, actions, variables, theming, and editing workflows
+
+See [docs/ff-yaml/](docs/ff-yaml/) for the full catalog.
 
 ## Claude Code Skills
 
-Copy skills from `skills/` into your project's `.claude/skills/` directory for Claude Code integration:
+Copy skills from [`skills/`](skills/) into your project's `.claude/skills/` directory:
 
 - **`ff-yaml-dev.md`** — Core workflow: reading, editing, and creating FlutterFlow pages/components
 - **`ff-widget-patterns.md`** — Quick reference for common widget YAML patterns and snippets
 
+## Development
+
+```bash
+git clone https://github.com/mohn93/ff-mcp.git
+cd ff-mcp
+npm install
+npm run build
+npm run dev          # watch mode
+```
+
 ## Requirements
 
 - Node.js 18+
-- Paid FlutterFlow subscription
-- FlutterFlow API token
+- FlutterFlow API token (paid FlutterFlow subscription required)
+
+## License
+
+MIT

@@ -1,20 +1,46 @@
 {
-  "name": "ff-mcp",
+  "name": "flutterflow-mcp",
   "version": "0.1.0",
-  "description": "MCP server for FlutterFlow Project API",
+  "description": "MCP server for the FlutterFlow Project API — AI-assisted FlutterFlow development through Claude and other MCP-compatible clients",
   "type": "module",
   "main": "build/index.js",
   "bin": {
-    "ff-mcp": "build/index.js"
+    "flutterflow-mcp": "build/index.js"
   },
+  "files": [
+    "build",
+    "docs/ff-yaml",
+    "skills"
+  ],
   "scripts": {
     "build": "tsc && chmod 755 build/index.js",
     "dev": "tsc --watch",
-    "start": "node build/index.js"
+    "start": "node build/index.js",
+    "prepublishOnly": "npm run build"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "mcp",
+    "flutterflow",
+    "model-context-protocol",
+    "ai",
+    "claude",
+    "yaml",
+    "no-code",
+    "low-code"
+  ],
+  "author": "mohn93",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mohn93/ff-mcp.git"
+  },
+  "homepage": "https://github.com/mohn93/ff-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/mohn93/ff-mcp/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
     "adm-zip": "^0.5.16",
