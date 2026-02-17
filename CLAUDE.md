@@ -32,7 +32,7 @@ Requires `FLUTTERFLOW_API_TOKEN` env var (Bearer token from FlutterFlow > Accoun
 
 Every tool/resource/prompt follows the same pattern: a `register*` function that takes `(server, client?)` and calls `server.tool()`, `server.resource()`, or `server.prompt()`. New tools go in `src/tools/`, new prompts in `src/prompts/`, new resources in `src/resources/`. Register them in `src/index.ts`.
 
-### Tools (7)
+### Tools (13)
 
 | Tool | File | Purpose |
 |------|------|---------|
@@ -43,22 +43,32 @@ Every tool/resource/prompt follows the same pattern: a `register*` function that
 | `update_project_yaml` | `tools/update-yaml.ts` | Push YAML changes |
 | `list_pages` | `tools/list-pages.ts` | Page index with names/folders (batched, 5 at a time) |
 | `get_page_by_name` | `tools/get-page-by-name.ts` | Fetch page by human-readable name |
+| `sync_project` | `tools/sync-project.ts` | Bulk download all YAML to local cache |
+| `get_page_summary` | `tools/get-page-summary.ts` | Cache-based page summary (widget tree, actions, params) |
+| `get_component_summary` | `tools/get-component-summary.ts` | Cache-based component summary |
+| `find_component_usages` | `tools/find-component-usages.ts` | Find all pages/components using a component |
+| `find_page_navigations` | `tools/find-page-navigations.ts` | Find all navigation actions targeting a page |
+| `get_yaml_docs` | `tools/get-yaml-docs.ts` | Search/retrieve FF YAML reference docs by topic or file |
 
 ### Utilities
 
 - `utils/decode-yaml.ts` — `decodeProjectYamlResponse()`: base64 → adm-zip → `Record<string, string>`
 - `utils/parse-folders.ts` — `parseFolderMapping()`: regex-based extraction of scaffold→folder mapping from the `folders` YAML file
+- `utils/cache.ts` — Local cache functions: `cacheRead`, `cacheWrite`, `cacheWriteBulk`, `cacheMeta`, `listCachedKeys`
 
 ## FlutterFlow YAML Conventions
 
 When modifying FF YAML through this MCP:
 
-- **Always update both `inputValue` AND `mostRecentInputValue`** to the same value — they must stay in sync.
+- **Always update both `inputValue` AND `mostRecentInputValue`** to the same value — they must stay in sync. **Exceptions:** `fontWeightValue` and `fontSizeValue` only accept `inputValue` (no `mostRecentInputValue`).
 - **Use node-level file keys for targeted edits** (`page/id-Scaffold_XXX/page-widget-tree-outline/node/id-Widget_YYY`) instead of editing the full page YAML.
 - **Always validate before pushing** — call `validate_yaml` before `update_project_yaml`.
 - **Pass YAML as normal multi-line strings** — the MCP SDK handles JSON serialization. Do not escape newlines.
+- **Adding new widgets requires node-level files** — the full page YAML (`page/id-Scaffold_XXX`) only stores page metadata. Widget children embedded inline will be stripped by the server. Push the widget tree outline + individual node files together.
+- **Column has no `mainAxisSize` field** — use `minSizeValue: { inputValue: true }` for shrink-to-content behavior.
+- **AppBar `templateType`** — only `LARGE_HEADER` is confirmed valid. Control height via `toolbarHeight`. Do not use `STANDARD`.
 
-See `ff-mcp-guide.md` for the complete development guide including value patterns, widget tree structure, and the recommended workflow.
+See `docs/ff-yaml/` for the complete YAML reference catalog including widget schemas, actions, variables, theming, and editing workflows.
 
 ## Known Limitations
 

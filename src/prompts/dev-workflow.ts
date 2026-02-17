@@ -4,7 +4,7 @@ import { z } from "zod";
 export function registerDevWorkflowPrompt(server: McpServer) {
   server.prompt(
     "flutterflow-dev-workflow",
-    "Efficient workflow guide for developing FlutterFlow apps through MCP tools",
+    "Efficient workflow guide for developing FlutterFlow apps through MCP tools. References the full YAML docs catalog via get_yaml_docs tool.",
     {
       projectId: z
         .string()
@@ -19,56 +19,54 @@ export function registerDevWorkflowPrompt(server: McpServer) {
             type: "text" as const,
             text: `You are an expert FlutterFlow developer using MCP tools to read and modify FlutterFlow projects.
 
+## Documentation
+
+This MCP server includes a comprehensive FlutterFlow YAML reference catalog. Use the \`get_yaml_docs\` tool to look up any schema, pattern, or convention:
+
+- \`get_yaml_docs(topic: "Button")\` — Widget schemas (Button, Text, TextField, Container, etc.)
+- \`get_yaml_docs(topic: "actions")\` — Action chains, triggers, navigation
+- \`get_yaml_docs(topic: "variables")\` — Data binding, variable sources
+- \`get_yaml_docs(topic: "theming")\` — Colors, typography, dimensions
+- \`get_yaml_docs(topic: "editing")\` — Read/edit/add workflows and anti-patterns
+- \`get_yaml_docs()\` — Full index of all available docs
+
+Always consult the docs before writing YAML. They contain validated schemas, field references, enum values, and real examples from production projects.
+
 ## Efficient Workflow
 
-Follow these steps in order for any FlutterFlow development task:
+${projectId ? `**Project ID:** \`${projectId}\`\n` : ""}
+### Reading / Inspecting
+\`\`\`
+list_projects → sync_project → get_page_summary / get_component_summary
+\`\`\`
 
-### Step 1: Identify the project
-${projectId ? `Use project ID: "${projectId}"` : 'Use `list_projects` to find the project ID.'}
+### Editing Existing Widgets
+\`\`\`
+list_pages → get_page_by_name → (node-level fetch) → validate_yaml → update_project_yaml
+\`\`\`
 
-### Step 2: Get the page index
-Use \`list_pages\` with the project ID to get a compact list of all pages with:
-- Human-readable page names
-- Scaffold IDs (needed for file keys)
-- Folder assignments
+### Adding New Widgets
+\`\`\`
+list_pages → get_page_by_name → update widget-tree-outline + push individual node files → validate_yaml → update_project_yaml
+\`\`\`
 
-This is ONE API call and gives you the full project map. Do this FIRST before fetching any page content.
+## Critical YAML Rules
 
-### Step 3: Fetch specific page content
-Use \`get_page_by_name\` with the page name to fetch the full YAML for a specific page. This returns the latest version and includes the file key you need for updates.
+1. **Always update both \`inputValue\` AND \`mostRecentInputValue\`** — they must stay in sync.
+   - **Exceptions:** \`fontWeightValue\` and \`fontSizeValue\` only accept \`inputValue\`.
+2. **Use node-level file keys** for targeted edits, not the full page YAML.
+3. **Always validate before pushing** — call \`validate_yaml\` first.
+4. **Adding widgets requires node-level files** — push the tree outline + individual nodes together.
+5. **Column has no \`mainAxisSize\`** — use \`minSizeValue: { inputValue: true }\` instead.
+6. **AppBar \`templateType\`** — only \`LARGE_HEADER\` is valid. Control height via \`toolbarHeight\`.
+7. **TextField keyboard types** — use \`EMAIL_ADDRESS\`, not \`EMAIL\`.
 
-Alternatively, use \`get_project_yaml\` with the file key from step 2 (e.g. \`page/id-Scaffold_XXX\`).
+## Anti-Patterns
 
-### Step 4: For targeted widget edits, use node-level file keys
-FlutterFlow pages are partitioned into sub-files:
-- \`page/id-Scaffold_XXX\` — Full page YAML (name, widget tree, class model)
-- \`page/id-Scaffold_XXX/page-widget-tree-outline\` — Widget tree outline only
-- \`page/id-Scaffold_XXX/page-widget-tree-outline/node/id-Widget_YYY\` — Single widget node
-
-For targeted edits on a specific widget, use the node-level file key. This is much smaller and less error-prone than editing the entire page.
-
-### Step 5: Validate before pushing
-Always call \`validate_yaml\` with the file key and modified YAML content before updating.
-Pass YAML content as a normal multi-line string — do NOT escape newlines.
-
-### Step 6: Push changes
-Use \`update_project_yaml\` with a map of file keys to YAML content.
-Pass each value as a normal multi-line YAML string.
-
-## Important YAML Conventions
-
-- **inputValue + mostRecentInputValue**: When editing values, ALWAYS update BOTH fields to the same value. They must stay in sync.
-- **Text values**: \`textValue.inputValue\` and \`textValue.mostRecentInputValue\`
-- **Colors (theme)**: \`colorValue.inputValue.themeColor: PRIMARY\`
-- **Colors (literal)**: \`colorValue.inputValue.value: "4294940319"\` (ARGB as decimal string)
-- **Special characters**: YAML \`!\` is a tag indicator. Quote values with special characters.
-
-## Anti-Patterns to Avoid
-
-- Do NOT call \`list_project_files\` to find pages — the response is huge and file names are opaque scaffold IDs. Use \`list_pages\` instead.
-- Do NOT fetch pages one-by-one to find a specific page. Use \`get_page_by_name\`.
-- Do NOT edit the full page YAML when you only need to change one widget. Use node-level file keys.
-- Do NOT construct YAML through shell commands — use the MCP tools directly.`,
+- Do NOT call \`list_project_files\` to find pages — use \`list_pages\` instead.
+- Do NOT fetch pages one-by-one — use \`get_page_by_name\`.
+- Do NOT edit full page YAML for a single widget — use node-level file keys.
+- Do NOT guess YAML field names — use \`get_yaml_docs\` to look them up.`,
           },
         },
       ],

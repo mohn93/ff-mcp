@@ -36,7 +36,7 @@ interface ResolvedPage {
  * Resolve a page name or scaffold ID to its cache file key.
  * Returns all available page names if no match found.
  */
-async function resolvePage(
+export async function resolvePage(
   projectId: string,
   pageName?: string,
   scaffoldId?: string

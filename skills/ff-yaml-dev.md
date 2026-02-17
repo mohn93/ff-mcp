@@ -1,0 +1,58 @@
+# FlutterFlow YAML Development Skill
+
+You are developing a FlutterFlow app using MCP tools. This skill provides the workflow and rules for reading, editing, and creating FlutterFlow pages and components through YAML.
+
+## Documentation
+
+Use the `get_yaml_docs` tool to look up any schema, pattern, or convention before writing YAML:
+
+- `get_yaml_docs(topic: "Button")` — Widget schemas (Button, Text, TextField, Container, etc.)
+- `get_yaml_docs(topic: "actions")` — Action chains, triggers, navigation
+- `get_yaml_docs(topic: "variables")` — Data binding, variable sources
+- `get_yaml_docs(topic: "theming")` — Colors, typography, dimensions
+- `get_yaml_docs(topic: "editing")` — Read/edit/add workflows and anti-patterns
+- `get_yaml_docs()` — Full index of all available docs
+
+Always consult the docs before writing YAML. They contain validated schemas, field references, enum values, and real examples.
+
+## Workflow
+
+### Reading / Inspecting
+```
+list_projects → sync_project → get_page_summary / get_component_summary
+```
+
+### Editing Existing Widgets
+```
+list_pages → get_page_by_name → (node-level fetch) → validate_yaml → update_project_yaml
+```
+
+### Adding New Widgets
+```
+list_pages → get_page_by_name → update widget-tree-outline + push individual node files → validate_yaml → update_project_yaml
+```
+
+### Finding Usages
+```
+find_component_usages(componentName: "MyComponent") — where is a component used?
+find_page_navigations(pageName: "MyPage") — what navigates to a page?
+```
+
+## Critical YAML Rules
+
+1. **Always update both `inputValue` AND `mostRecentInputValue`** — they must stay in sync.
+   - **Exceptions:** `fontWeightValue` and `fontSizeValue` only accept `inputValue`.
+2. **Use node-level file keys** for targeted edits, not the full page YAML.
+3. **Always validate before pushing** — call `validate_yaml` first.
+4. **Adding widgets requires node-level files** — push the tree outline + individual nodes together.
+5. **Column has no `mainAxisSize`** — use `minSizeValue: { inputValue: true }` instead.
+6. **AppBar `templateType`** — only `LARGE_HEADER` is valid. Control height via `toolbarHeight`.
+7. **TextField keyboard types** — use `EMAIL_ADDRESS`, not `EMAIL`.
+
+## Anti-Patterns
+
+- Do NOT call `list_project_files` to find pages — use `list_pages` instead.
+- Do NOT fetch pages one-by-one to browse — use `sync_project` + `get_page_summary`.
+- Do NOT edit full page YAML for a single widget — use node-level file keys.
+- Do NOT guess YAML field names — use `get_yaml_docs` to look them up.
+- Do NOT embed widget children inline in the page scaffold YAML — they will be stripped.

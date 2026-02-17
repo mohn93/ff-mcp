@@ -14,11 +14,14 @@ import { registerSyncProjectTool } from "./tools/sync-project.js";
 import { registerGetPageSummaryTool } from "./tools/get-page-summary.js";
 import { registerGetComponentSummaryTool } from "./tools/get-component-summary.js";
 import { registerFindComponentUsagesTool } from "./tools/find-component-usages.js";
+import { registerFindPageNavigationsTool } from "./tools/find-page-navigations.js";
 import { registerResources } from "./resources/projects.js";
+import { registerDocsResources } from "./resources/docs.js";
 import { registerGeneratePagePrompt } from "./prompts/generate-page.js";
 import { registerModifyComponentPrompt } from "./prompts/modify-component.js";
 import { registerInspectProjectPrompt } from "./prompts/inspect-project.js";
 import { registerDevWorkflowPrompt } from "./prompts/dev-workflow.js";
+import { registerGetYamlDocsTool } from "./tools/get-yaml-docs.js";
 
 const server = new McpServer({
   name: "ff-mcp",
@@ -39,9 +42,12 @@ registerSyncProjectTool(server, client);
 registerGetPageSummaryTool(server);
 registerGetComponentSummaryTool(server);
 registerFindComponentUsagesTool(server);
+registerFindPageNavigationsTool(server);
+registerGetYamlDocsTool(server);
 
 // Register resources
 registerResources(server, client);
+registerDocsResources(server);
 
 // Register prompts
 registerGeneratePagePrompt(server);
