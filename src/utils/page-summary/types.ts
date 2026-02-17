@@ -48,6 +48,14 @@ export interface PageMeta {
   stateFields: StateFieldInfo[];
 }
 
+/** Top-level component metadata. */
+export interface ComponentMeta {
+  componentName: string;
+  containerId: string;
+  description: string;
+  params: ParamInfo[];
+}
+
 /** Raw tree node from the widget tree outline YAML. */
 export interface OutlineNode {
   key: string;

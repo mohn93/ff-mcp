@@ -12,6 +12,8 @@ import { registerListPagesTool } from "./tools/list-pages.js";
 import { registerGetPageByNameTool } from "./tools/get-page-by-name.js";
 import { registerSyncProjectTool } from "./tools/sync-project.js";
 import { registerGetPageSummaryTool } from "./tools/get-page-summary.js";
+import { registerGetComponentSummaryTool } from "./tools/get-component-summary.js";
+import { registerFindComponentUsagesTool } from "./tools/find-component-usages.js";
 import { registerResources } from "./resources/projects.js";
 import { registerGeneratePagePrompt } from "./prompts/generate-page.js";
 import { registerModifyComponentPrompt } from "./prompts/modify-component.js";
@@ -35,6 +37,8 @@ registerListPagesTool(server, client);
 registerGetPageByNameTool(server, client);
 registerSyncProjectTool(server, client);
 registerGetPageSummaryTool(server);
+registerGetComponentSummaryTool(server);
+registerFindComponentUsagesTool(server);
 
 // Register resources
 registerResources(server, client);

@@ -2,7 +2,7 @@
  * Render a PageMeta + SummaryNode tree as a readable text summary
  * with box-drawing characters and inline trigger summaries.
  */
-import { ActionSummary, PageMeta, SummaryNode, TriggerSummary } from "./types.js";
+import { ActionSummary, ComponentMeta, PageMeta, SummaryNode, TriggerSummary } from "./types.js";
 
 /** Format a single action into a compact string. */
 function fmtAction(a: ActionSummary): string {
@@ -115,6 +115,53 @@ export function formatPageSummary(meta: PageMeta, tree: SummaryNode): string {
   lines.push("");
   lines.push("Widget Tree:");
   // Render children directly (skip the Scaffold root itself)
+  for (let i = 0; i < tree.children.length; i++) {
+    renderTree(
+      tree.children[i],
+      "",
+      i === tree.children.length - 1,
+      false,
+      lines
+    );
+  }
+
+  return lines.join("\n");
+}
+
+/**
+ * Format a complete component summary as text.
+ */
+export function formatComponentSummary(meta: ComponentMeta, tree: SummaryNode): string {
+  const lines: string[] = [];
+
+  // Header
+  lines.push(`${meta.componentName} (${meta.containerId})`);
+
+  if (meta.description) {
+    lines.push(`Description: ${meta.description}`);
+  }
+
+  // Params
+  if (meta.params.length > 0) {
+    const paramStrs = meta.params.map((p) => {
+      const def = p.defaultValue ? `, default: ${p.defaultValue}` : "";
+      return `${p.name} (${p.dataType}${def})`;
+    });
+    lines.push(`Params: ${paramStrs.join(", ")}`);
+  }
+
+  // Root-level triggers
+  if (tree.triggers.length > 0) {
+    lines.push("");
+    for (const t of tree.triggers) {
+      lines.push(fmtTrigger(t));
+    }
+  }
+
+  // Widget tree
+  lines.push("");
+  lines.push("Widget Tree:");
+  // Render children directly (skip the Container root itself)
   for (let i = 0; i < tree.children.length; i++) {
     renderTree(
       tree.children[i],
