@@ -726,7 +726,112 @@ trueAction:
 
 ## Disabled Actions
 
-Actions can be conditionally disabled using a `disableAction` wrapper. When the condition evaluates to true, the wrapped action executes; the chain terminates otherwise.
+FlutterFlow uses `disableAction` to mark actions or conditionals as disabled. There are three distinct patterns depending on what is being disabled.
+
+### Pattern 1: Disabling a Leaf Action (Unconditional)
+
+To fully disable a single action (navigate, database, revenueCat, etc.), wrap the action content in `disableAction` at the **action file level**. The trigger chain continues to reference the same key — FlutterFlow reads the file, sees `disableAction`, and skips execution.
+
+```yaml
+# Action file: id-epxy2a0w.yaml
+key: epxy2a0w
+disableAction:
+  actionNode:
+    key: gm8dis03           # Internal node key (can be any unique key)
+    action:
+      navigate:
+        allowBack: false
+        passedParameters:
+          widgetClassNodeKeyRef:
+            key: Scaffold_tydsj8ql
+        isNavigateBack: false
+        transition:
+          transitionType: FADE_IN
+          durationMillis: 500
+        pageNodeKeyRef:
+          key: Scaffold_tydsj8ql
+      key: epxy2a0w          # Must match the outer key
+```
+
+| Field | Description |
+|-------|-------------|
+| `key` (outer) | The action's original key — chain references this |
+| `disableAction.actionNode.key` | Internal node key (any unique value) |
+| `disableAction.actionNode.action` | The original action content, preserved for re-enabling |
+| `disableAction.actionNode.action.key` | Must match the outer `key` |
+
+**Important:** Disabling a leaf action at the file level does NOT disable `followUpAction` chains defined in the trigger YAML. If the trigger chain has a `followUpAction` after this action reference, that follow-up will still execute.
+
+### Pattern 2: Disabling a Conditional Node
+
+To disable an entire `conditionActions` block in the trigger chain, two changes are required:
+
+**Step 1 — Create a new action file** that wraps the full conditional in `disableAction.actionNode.conditionActions`. Leaf actions within the conditional are inlined (not file references) with their own `disableAction` wrappers:
+
+```yaml
+# Action file: id-ds8cnd01.yaml (new file)
+key: ds8cnd01
+disableAction:
+  actionNode:
+    key: f441awwi               # Original conditional node key from the chain
+    conditionActions:
+      falseAction:
+        key: wkklfcpy
+        action:
+          key: epxy2a0w
+          disableAction:          # Leaf action inlined with its own disable
+            actionNode:
+              key: gm8dis03
+              action:
+                navigate:
+                  allowBack: false
+                  pageNodeKeyRef:
+                    key: Scaffold_tydsj8ql
+                key: epxy2a0w
+      trueActions:
+        - condition:
+            revenueCatEntitlementResponse: {}
+          trueAction:
+            key: 5uq5p5vt
+            action:
+              key: bgxsmj4b
+              disableAction:      # Another leaf action inlined
+                actionNode:
+                  key: gm8dis04
+                  action:
+                    navigate:
+                      allowBack: false
+                      pageNodeKeyRef:
+                        key: Scaffold_91ca3wwv
+                    key: bgxsmj4b
+      hasMultiConditions: false
+      key: ev7ush66
+```
+
+**Step 2 — Update the trigger chain YAML.** Replace the `conditionActions` block with an `action` reference to a noop key (a key with no corresponding action file):
+
+```yaml
+# Before (in trigger chain):
+followUpAction:
+  key: f441awwi
+  conditionActions:
+    falseAction: ...
+    trueActions: ...
+    hasMultiConditions: false
+    key: ev7ush66
+
+# After (in trigger chain):
+followUpAction:
+  key: f441awwi
+  action:
+    key: np8noop1              # Noop key — no action file exists for this key
+```
+
+**Note:** The noop key has no corresponding action file. When pushed via the UI, FlutterFlow handles this internally. When pushed via the API, you may need to create the action file with the disabled conditional content under the noop key itself (see API Limitations).
+
+### Pattern 3: Conditionally Disabled Action
+
+Actions can be conditionally disabled using `disableAction` with a condition. When the condition evaluates to true, the wrapped action executes; otherwise it is skipped.
 
 ```yaml
 key: hfzr0kmk
@@ -763,7 +868,12 @@ disableAction:
       key: xsa3loej
 ```
 
-Note: In `disableAction`, the action body can be inlined directly rather than referenced by key.
+### Key Rules
+
+- `disableAction` is only valid in **action files**, never in the trigger chain YAML directly
+- Leaf actions inlined inside `disableAction` use the full action body, not key references
+- The original action content is preserved inside the wrapper for easy re-enabling
+- Disabling a leaf action does NOT prevent `followUpAction` chains in the trigger from continuing
 
 ---
 
