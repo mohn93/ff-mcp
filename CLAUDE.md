@@ -70,6 +70,21 @@ When modifying FF YAML through this MCP:
 
 See `docs/ff-yaml/` for the complete YAML reference catalog including widget schemas, actions, variables, theming, and editing workflows.
 
+## CI/CD
+
+**CI** (`.github/workflows/ci.yml`): Runs on every push/PR to `main`. Builds on Node 18, 20, 22.
+
+**Publish** (`.github/workflows/publish.yml`): Runs when a GitHub Release is created. Builds and publishes to npm with provenance.
+
+### Releasing a new version
+
+1. Bump `version` in `package.json`
+2. Commit and push to `main`
+3. Create a GitHub Release with tag `v<version>` (e.g. `v0.2.0`)
+4. The publish workflow auto-publishes to npm
+
+Requires `NPM_TOKEN` secret in GitHub repo settings.
+
 ## Known Limitations
 
 - Some large pages fail with buffer errors during ZIP decode — use node-level sub-files instead.
