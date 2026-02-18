@@ -1,6 +1,6 @@
 # Custom Code
 
-FlutterFlow supports four types of custom code: **Custom Actions** (async Dart functions with side effects), **Custom Functions** (pure synchronous Dart functions), **Custom Widgets** (Flutter widgets with parameters), and **AI Agents** (LLM-powered processing pipelines). Additionally, **App Action Components** provide reusable action chains that can be invoked from any page.
+FlutterFlow supports four types of custom code: **Custom Actions** (async Dart functions with side effects), **Custom Functions** (pure synchronous Dart functions), **Custom Widgets** (Flutter widgets with parameters), and **AI Agents** (LLM-powered processing pipelines). Additionally, **App Action Components** provide reusable action chains that can be invoked from any page, and **Custom Files** allow overriding special project-level files like `main.dart` and `AndroidManifest.xml`.
 
 ---
 
@@ -704,6 +704,81 @@ variable:
 
 ---
 
+## Custom Files
+
+Custom Files are special project-level files such as `main.dart` (the app entry point) and `AndroidManifest.xml`. Each has a metadata YAML file and a companion code file. They live under `custom-file/`.
+
+### File layout
+
+```
+custom-file/
+  id-MAIN.yaml                              # Metadata for main.dart
+  id-MAIN/custom-file-code.dart.yaml        # main.dart Dart code
+  id-ANDROID_MANIFEST.yaml                  # Metadata for AndroidManifest.xml
+  id-ANDROID_MANIFEST/custom-file-code.dart.yaml  # AndroidManifest.xml content
+```
+
+### MAIN metadata (id-MAIN.yaml)
+
+```yaml
+type: MAIN
+isUnlocked: false
+actions:
+  - type: FINAL_ACTION
+    identifier:
+      name: initializeUlink
+      key: t6snt
+      projectId: ulink-21sajt
+description: ""
+```
+
+### ANDROID_MANIFEST metadata (id-ANDROID_MANIFEST.yaml)
+
+```yaml
+type: ANDROID_MANIFEST
+identifier:
+  name: AndroidManifest.xml
+isUnlocked: true
+parameters:
+  29c3b7b9-afe7-4429-9d20-abb2e09f7a40:
+    parameter:
+      identifier:
+        name: ulinkDomain
+      dataType:
+        scalarType: String
+    value:
+      variable:
+        source: DEV_ENVIRONMENT
+        baseVariable:
+          environmentValue:
+            identifier:
+              name: ulinkDomain
+              key: eji5p6
+description: ""
+```
+
+### Definition fields
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `type` | Yes | File type: `MAIN` or `ANDROID_MANIFEST` |
+| `identifier` | For ANDROID_MANIFEST | `name` of the file |
+| `isUnlocked` | No | Whether the file is editable (default: false) |
+| `actions` | No | List of final actions (library initializers) that run at startup |
+| `parameters` | No | Template parameter substitutions for the code file |
+| `description` | No | Human-readable description |
+
+### Code files
+
+- **MAIN:** `custom-file/id-MAIN/custom-file-code.dart.yaml` contains the full `main.dart` with imports, `main()` function, Firebase/Supabase initialization, and library init calls.
+- **ANDROID_MANIFEST:** `custom-file/id-ANDROID_MANIFEST/custom-file-code.dart.yaml` contains the XML manifest with template placeholders (e.g., `{{unlinkDomain}}`, `{{ulink-21sajt.ulinkSchema}}`). Parameters in metadata map to these placeholders.
+
+### Parameter substitution
+
+Parameters in ANDROID_MANIFEST metadata define template variables. Each key is a UUID, and the value specifies where the parameter's value comes from (typically `DEV_ENVIRONMENT`). These get substituted into the code file's template placeholders at build time.
+
+---
+
 ## File Key Patterns Summary
 
 | Code type | Definition file | Code file | Directory |
@@ -713,3 +788,4 @@ variable:
 | Custom Widget | `custom-widgets/id-<key>.yaml` | (code embedded or separate) | `custom-widgets/` |
 | AI Agent | `agent/id-<key>.yaml` | N/A (no code file) | `agent/` |
 | App Action Component | `app-action-components/id-<key>.yaml` | N/A (actions are inline) | `app-action-components/` |
+| Custom File | `custom-file/id-<TYPE>.yaml` | `custom-file/id-<TYPE>/custom-file-code.dart.yaml` | `custom-file/` |

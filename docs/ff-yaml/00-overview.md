@@ -35,6 +35,25 @@ Every FlutterFlow project is a collection of YAML files accessed via file keys. 
 | `enums/id-XXX` | Enum definition with named values |
 | `collections/id-XXX` | Firestore collection schema: fields, types, subcollections |
 | `agent/id-XXX` | AI agent configuration |
+| `custom-file/id-<TYPE>` | Custom project files (main.dart, AndroidManifest.xml) |
+| `environment-settings` | Per-environment configuration values (API URLs, keys) |
+| `dependencies` | FlutterFlow library package dependencies |
+| `custom-code-dependencies` | Dart/Flutter pub dependencies for custom code |
+| `supabase` | Supabase connection config and database schema |
+| `firebase-analytics` | Firebase Analytics settings |
+| `firebase-crashlytics` | Firebase Crashlytics settings |
+| `firebase-performance-monitoring` | Firebase Performance Monitoring settings |
+| `push-notifications` | Push notification configuration |
+| `google-maps` | Google Maps API keys per platform |
+| `ad-mob` | AdMob advertising configuration |
+| `app-assets` | App icon, splash screen, error image settings |
+| `platforms` | Platform enablement flags (web, etc.) |
+| `library-values` | Values passed to FlutterFlow library dependencies |
+| `library-configurations/id-<projectId>` | Route overrides for library pages |
+| `download-code-settings` | Code download/GitHub push settings |
+| `tests` | FlutterFlow test runner configuration |
+| `material-theme` | Material 2 vs Material 3 toggle |
+| `miscellaneous` | Misc app-level settings and feature flags |
 
 ---
 

@@ -574,6 +574,52 @@ Custom icons are referenced in widgets using their `familyName` and `codePoint` 
 
 ---
 
+## 14. Theme Widgets
+
+The `themeWidgets` section in `theme.yaml` defines default styling applied to widget types (buttons, text fields, etc.) app-wide. Individual widget instances can override any of these defaults in their own props.
+
+### Structure
+
+```yaml
+# From theme.yaml
+themeWidgets:
+  elevatedButton:
+    fontFamily: Inter
+    textStyle:
+      themeStyle: TITLE_SMALL
+    textColorValue:
+      inputValue:
+        themeColor: PRIMARY_TEXT
+    backgroundColorValue:
+      inputValue:
+        themeColor: PRIMARY
+    borderRadius:
+      type: FF_BORDER_RADIUS_ALL
+      allValue:
+        inputValue: 8
+    dimensions:
+      height:
+        pixelsValue:
+          inputValue: 44
+```
+
+### Supported widget type keys
+
+The `themeWidgets` object can contain entries for the following widget types:
+
+| Key | Widget Type |
+|-----|-------------|
+| `elevatedButton` | Elevated / filled buttons |
+| `outlinedButton` | Outlined buttons |
+| `textButton` | Text-only buttons |
+| `textField` | Text input fields |
+
+Each entry can specify any combination of styling properties (font family, text style, colors, border radius, dimensions, padding, etc.) using the same YAML patterns documented in the sections above.
+
+When a widget of that type is placed on a page, it inherits these defaults automatically. Any property set directly on the widget instance takes precedence over the theme widget default.
+
+---
+
 ## Quick Reference: Style Property Patterns
 
 | Property | Pattern | Example |
