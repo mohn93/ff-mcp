@@ -33,7 +33,7 @@ const client = createClient();
 // Register tools
 registerListProjectsTool(server, client);
 registerListFilesTool(server, client);
-registerGetYamlTool(server, client);
+registerGetYamlTool(server);
 registerValidateYamlTool(server, client);
 registerUpdateYamlTool(server, client);
 registerListPagesTool(server, client);

@@ -1,27 +1,21 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { FlutterFlowClient } from "../api/flutterflow.js";
-import { decodeProjectYamlResponse } from "../utils/decode-yaml.js";
-import { cacheRead, cacheWrite } from "../utils/cache.js";
+import { cacheRead, listCachedKeys } from "../utils/cache.js";
 
-export function registerGetYamlTool(
-  server: McpServer,
-  client: FlutterFlowClient
-) {
+export function registerGetYamlTool(server: McpServer) {
   server.tool(
     "get_project_yaml",
-    "Download YAML files from a FlutterFlow project. Returns one file if fileName is specified, otherwise returns all files.",
+    "Read YAML files from the local project cache. Requires sync_project to be run first. Returns one file if fileName is specified, or lists all cached file keys if omitted.",
     {
       projectId: z.string().describe("The FlutterFlow project ID"),
       fileName: z
         .string()
         .optional()
         .describe(
-          "Specific YAML file name to download (e.g. 'app-details', 'page/id-xxx'). Omit to get all files."
+          "Specific YAML file name to read (e.g. 'app-details', 'page/id-xxx'). Omit to list all cached file keys."
         ),
     },
     async ({ projectId, fileName }) => {
-      // Cache-first for single-file requests
       if (fileName) {
         const cached = await cacheRead(projectId, fileName);
         if (cached) {
@@ -29,35 +23,41 @@ export function registerGetYamlTool(
             content: [
               {
                 type: "text" as const,
-                text: `# ${fileName} (cached)\n${cached}`,
+                text: `# ${fileName}\n${cached}`,
               },
             ],
           };
         }
-      }
-
-      const raw = await client.getProjectYamls(projectId, fileName);
-      const decoded = decodeProjectYamlResponse(raw);
-
-      // Write fetched results to cache (strip .yaml from ZIP entry names to avoid double extension)
-      for (const [name, yaml] of Object.entries(decoded)) {
-        const cleanName = name.endsWith(".yaml") ? name.slice(0, -".yaml".length) : name;
-        await cacheWrite(projectId, cleanName, yaml);
-      }
-
-      const entries = Object.entries(decoded);
-      if (entries.length === 1) {
-        const [name, yaml] = entries[0];
         return {
-          content: [{ type: "text" as const, text: `# ${name}\n${yaml}` }],
+          content: [
+            {
+              type: "text" as const,
+              text: `File "${fileName}" not found in local cache for project "${projectId}". Run sync_project(projectId: "${projectId}") first to download all YAML files, then retry.`,
+            },
+          ],
+        };
+      }
+
+      // No fileName: list all cached keys
+      const keys = await listCachedKeys(projectId);
+      if (keys.length === 0) {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `No cached files found for project "${projectId}". Run sync_project(projectId: "${projectId}") first to download all YAML files.`,
+            },
+          ],
         };
       }
 
       return {
-        content: entries.map(([name, yaml]) => ({
-          type: "text" as const,
-          text: `# ${name}\n${yaml}`,
-        })),
+        content: [
+          {
+            type: "text" as const,
+            text: `# Cached files (${keys.length})\n${keys.join("\n")}`,
+          },
+        ],
       };
     }
   );
