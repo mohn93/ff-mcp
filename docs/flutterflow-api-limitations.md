@@ -82,3 +82,60 @@ The validation endpoint treats missing referenced files as warnings, while the p
 **Workaround:** Fetch node-level sub-files individually instead of the full page YAML.
 
 **Suggestion:** Support streaming or chunked responses for large pages, or provide a pagination mechanism for large widget trees.
+
+---
+
+## 7. Custom Code (Actions, Functions, Widgets) Cannot Be Edited via API
+
+**Problem:** The `updateProjectByYaml` endpoint does not support updating Dart code for custom actions, functions, or widgets. While these files are fully **readable** through the `projectYamls` endpoint, writing to them causes UI corruption in the FlutterFlow editor.
+
+### What happens when you push
+
+The `updateProjectByYaml` endpoint processes metadata fields (`identifier`, `returnParameter`, `arguments`, etc.) from the pushed YAML. However, the Dart code stored in the `code` field is not correctly handled:
+
+- **Pushing to `action-code.dart` / `function-code.dart`:** FlutterFlow desyncs metadata from code. The UI displays the raw metadata YAML in the code editor instead of rendering the Dart code.
+- **Pushing to the metadata YAML with a `code:` field:** FlutterFlow stores the entire pushed YAML content as the `code` value. Each subsequent push nests the previous content inside another `code:` field, creating recursive corruption.
+- **Pushing metadata without `code:` field:** The UI displays the metadata YAML (with the original code auto-embedded in `code:`) in the code editor instead of the Dart code.
+- **Pushing only `code:` without `identifier`:** Rejected with `Cannot change the key "xxx" to ""`.
+- **Pushing raw Dart to metadata key:** Rejected with YAML parse error (content must be valid YAML).
+
+### Metadata updates DO work (partially)
+
+The API correctly processes metadata field changes:
+- `identifier.name` and `identifier.key` are validated (key must match, name is required)
+- `returnParameter` is updated — but omitting it **removes the return type**, which is destructive
+- `arguments` / `parameters` are similarly processed
+
+This means the endpoint treats custom code file keys as metadata YAML, not code containers.
+
+### Key findings
+
+| What we pushed | File key | Result |
+|---------------|----------|--------|
+| Raw Dart | metadata key | 400: YAML parse error |
+| Only `code:` field | metadata key | 400: identifier missing |
+| `identifier` + `code:` | metadata key | Success but UI shows YAML as code |
+| Full metadata + `code:` | metadata key | Success but recursive nesting |
+| Full metadata, no `code:` | metadata key | Success but UI shows metadata as code |
+| Raw Dart | `action-code.dart` | Success but UI shows metadata as code |
+| Both metadata + code file | both keys | Same corruption |
+| YAML with `code:` | `action-code.dart.yaml` | Same corruption |
+
+### File structure (read-only)
+
+Each custom code item has exactly 2 files:
+
+| Type | Metadata key | Code key | Code format |
+|------|-------------|----------|-------------|
+| Custom Action | `custom-actions/id-{key}` | `custom-actions/id-{key}/action-code.dart` | Full Dart source (imports + signature + body) |
+| Custom Function | `custom-functions/id-{key}` | `custom-functions/id-{key}/function-code.dart` | Function body only (no signature) |
+| Custom Widget | `custom-widgets/id-{key}` | `custom-widgets/id-{key}/widget-code.dart` | Full Dart class (imports + class) |
+
+### Impact
+
+Custom code files should be treated as **read-only** through the API. The MCP can read and display code for review, but edits must be done manually in the FlutterFlow UI. When AI-assisted editing is needed, the MCP should output the modified code for the user to copy-paste into the FlutterFlow editor.
+
+### Suggestion
+
+Provide a dedicated endpoint for updating custom code (e.g., `updateCustomActionCode`) that accepts the project ID, action/function/widget key, and the raw Dart code string — separate from the metadata YAML update flow. Alternatively, fix `updateProjectByYaml` to correctly handle the `code` field in custom code metadata files without corrupting the UI rendering.
+

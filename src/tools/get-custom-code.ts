@@ -11,6 +11,8 @@ import { resolveDataType } from "../utils/resolve-data-type.js";
 
 interface CustomAction {
   name: string;
+  key: string;
+  fileKey: string;
   args: { name: string; type: string; required: boolean }[];
   returnType: string | null;
   includeContext: boolean;
@@ -19,6 +21,8 @@ interface CustomAction {
 
 interface CustomFunction {
   name: string;
+  key: string;
+  fileKey: string;
   args: { name: string; type: string; required: boolean }[];
   returnType: string | null;
   code?: string;
@@ -26,6 +30,8 @@ interface CustomFunction {
 
 interface CustomWidget {
   name: string;
+  key: string;
+  fileKey: string;
   params: { name: string; type: string; required: boolean }[];
   description: string;
   code?: string;
@@ -33,6 +39,8 @@ interface CustomWidget {
 
 interface AIAgent {
   name: string;
+  key: string;
+  fileKey: string;
   displayName: string;
   status: string;
   provider: string;
@@ -55,6 +63,7 @@ function formatArg(arg: { name: string; type: string; required: boolean }): stri
 function formatAction(action: CustomAction): string {
   const lines: string[] = [];
   lines.push(`### ${action.name}`);
+  lines.push(`Key: ${action.key} | File: \`${action.fileKey}\``);
   if (action.args.length === 0) {
     lines.push("Args: (none)");
   } else {
@@ -74,6 +83,7 @@ function formatAction(action: CustomAction): string {
 function formatFunction(fn: CustomFunction): string {
   const lines: string[] = [];
   lines.push(`### ${fn.name}`);
+  lines.push(`Key: ${fn.key} | File: \`${fn.fileKey}\``);
   if (fn.args.length === 0) {
     lines.push("Args: (none)");
   } else {
@@ -92,6 +102,7 @@ function formatFunction(fn: CustomFunction): string {
 function formatWidget(widget: CustomWidget): string {
   const lines: string[] = [];
   lines.push(`### ${widget.name}`);
+  lines.push(`Key: ${widget.key} | File: \`${widget.fileKey}\``);
   if (widget.params.length === 0) {
     lines.push("Params: (none)");
   } else {
@@ -113,6 +124,7 @@ function formatWidget(widget: CustomWidget): string {
 function formatAgent(agent: AIAgent): string {
   const lines: string[] = [];
   lines.push(`### ${agent.displayName} [${agent.status}]`);
+  lines.push(`Key: ${agent.key} | File: \`${agent.fileKey}\``);
   lines.push(`Provider: ${agent.provider} (${agent.model})`);
   lines.push(`Input: ${agent.requestTypes.join(", ")}`);
   lines.push(`Output: ${agent.responseType}`);
@@ -159,28 +171,26 @@ async function processActions(
   const allKeys = await listCachedKeys(projectId, "custom-actions/id-");
   const topKeys = allKeys.filter((k) => /^custom-actions\/id-[a-z0-9]+$/i.test(k));
 
-  return batchProcess(topKeys, 10, async (key): Promise<CustomAction | null> => {
-    const content = await cacheRead(projectId, key);
+  return batchProcess(topKeys, 10, async (fileKey): Promise<CustomAction | null> => {
+    const content = await cacheRead(projectId, fileKey);
     if (!content) return null;
     const doc = YAML.parse(content) as Record<string, unknown>;
     const id = doc.identifier as Record<string, unknown> | undefined;
     const name = (id?.name as string) || "unknown";
     if (nameFilter && name.toLowerCase() !== nameFilter.toLowerCase()) return null;
 
+    const idKey = (id?.key as string) || fileKey.match(/id-([a-z0-9]+)$/i)?.[1] || "unknown";
     const args = parseArgs(doc.arguments as Record<string, unknown>[] | undefined);
     const returnType = resolveReturnType(doc.returnParameter as Record<string, unknown> | undefined);
     const includeContext = (doc.includeContext as boolean) ?? false;
 
     let code: string | undefined;
     if (includeCode) {
-      const idKey = (id?.key as string) || key.match(/id-([a-z0-9]+)$/i)?.[1];
-      if (idKey) {
-        const codeContent = await cacheRead(projectId, `custom-actions/id-${idKey}/action-code.dart`);
-        if (codeContent) code = codeContent;
-      }
+      const codeContent = await cacheRead(projectId, `custom-actions/id-${idKey}/action-code.dart`);
+      if (codeContent) code = codeContent;
     }
 
-    return { name, args, returnType, includeContext, code };
+    return { name, key: idKey, fileKey, args, returnType, includeContext, code };
   }).then((results) => results.filter((r): r is CustomAction => r !== null));
 }
 
@@ -192,27 +202,25 @@ async function processFunctions(
   const allKeys = await listCachedKeys(projectId, "custom-functions/id-");
   const topKeys = allKeys.filter((k) => /^custom-functions\/id-[a-z0-9]+$/i.test(k));
 
-  return batchProcess(topKeys, 10, async (key): Promise<CustomFunction | null> => {
-    const content = await cacheRead(projectId, key);
+  return batchProcess(topKeys, 10, async (fileKey): Promise<CustomFunction | null> => {
+    const content = await cacheRead(projectId, fileKey);
     if (!content) return null;
     const doc = YAML.parse(content) as Record<string, unknown>;
     const id = doc.identifier as Record<string, unknown> | undefined;
     const name = (id?.name as string) || "unknown";
     if (nameFilter && name.toLowerCase() !== nameFilter.toLowerCase()) return null;
 
+    const idKey = (id?.key as string) || fileKey.match(/id-([a-z0-9]+)$/i)?.[1] || "unknown";
     const args = parseArgs(doc.arguments as Record<string, unknown>[] | undefined);
     const returnType = resolveReturnType(doc.returnParameter as Record<string, unknown> | undefined);
 
     let code: string | undefined;
     if (includeCode) {
-      const idKey = (id?.key as string) || key.match(/id-([a-z0-9]+)$/i)?.[1];
-      if (idKey) {
-        const codeContent = await cacheRead(projectId, `custom-functions/id-${idKey}/function-code.dart`);
-        if (codeContent) code = codeContent;
-      }
+      const codeContent = await cacheRead(projectId, `custom-functions/id-${idKey}/function-code.dart`);
+      if (codeContent) code = codeContent;
     }
 
-    return { name, args, returnType, code };
+    return { name, key: idKey, fileKey, args, returnType, code };
   }).then((results) => results.filter((r): r is CustomFunction => r !== null));
 }
 
@@ -224,28 +232,26 @@ async function processWidgets(
   const allKeys = await listCachedKeys(projectId, "custom-widgets/id-");
   const topKeys = allKeys.filter((k) => /^custom-widgets\/id-[a-z0-9]+$/i.test(k));
 
-  return batchProcess(topKeys, 10, async (key): Promise<CustomWidget | null> => {
-    const content = await cacheRead(projectId, key);
+  return batchProcess(topKeys, 10, async (fileKey): Promise<CustomWidget | null> => {
+    const content = await cacheRead(projectId, fileKey);
     if (!content) return null;
     const doc = YAML.parse(content) as Record<string, unknown>;
     const id = doc.identifier as Record<string, unknown> | undefined;
     const name = (id?.name as string) || "unknown";
     if (nameFilter && name.toLowerCase() !== nameFilter.toLowerCase()) return null;
 
+    const idKey = (id?.key as string) || fileKey.match(/id-([a-z0-9]+)$/i)?.[1] || "unknown";
     const rawParams = doc.parameters as Record<string, unknown>[] | undefined;
     const params = parseArgs(rawParams);
     const description = (doc.description as string) || "";
 
     let code: string | undefined;
     if (includeCode) {
-      const idKey = (id?.key as string) || key.match(/id-([a-z0-9]+)$/i)?.[1];
-      if (idKey) {
-        const codeContent = await cacheRead(projectId, `custom-widgets/id-${idKey}/widget-code.dart`);
-        if (codeContent) code = codeContent;
-      }
+      const codeContent = await cacheRead(projectId, `custom-widgets/id-${idKey}/widget-code.dart`);
+      if (codeContent) code = codeContent;
     }
 
-    return { name, params, description, code };
+    return { name, key: idKey, fileKey, params, description, code };
   }).then((results) => results.filter((r): r is CustomWidget => r !== null));
 }
 
@@ -256,14 +262,15 @@ async function processAgents(
   const allKeys = await listCachedKeys(projectId, "agent/id-");
   const topKeys = allKeys.filter((k) => /^agent\/id-[a-z0-9]+$/i.test(k));
 
-  return batchProcess(topKeys, 10, async (key): Promise<AIAgent | null> => {
-    const content = await cacheRead(projectId, key);
+  return batchProcess(topKeys, 10, async (fileKey): Promise<AIAgent | null> => {
+    const content = await cacheRead(projectId, fileKey);
     if (!content) return null;
     const doc = YAML.parse(content) as Record<string, unknown>;
     const id = doc.identifier as Record<string, unknown> | undefined;
     const identifierName = (id?.name as string) || "unknown";
     if (nameFilter && identifierName.toLowerCase() !== nameFilter.toLowerCase()) return null;
 
+    const idKey = (id?.key as string) || fileKey.match(/id-([a-z0-9]+)$/i)?.[1] || "unknown";
     const displayName = (doc.name as string) || identifierName;
     const status = (doc.status as string) || "UNKNOWN";
     const aiModel = doc.aiModel as Record<string, unknown> | undefined;
@@ -275,7 +282,7 @@ async function processAgents(
     const responseType = (resOpts?.responseType as string) || "UNKNOWN";
     const description = (doc.description as string) || "";
 
-    return { name: identifierName, displayName, status, provider, model, requestTypes, responseType, description };
+    return { name: identifierName, key: idKey, fileKey, displayName, status, provider, model, requestTypes, responseType, description };
   }).then((results) => results.filter((r): r is AIAgent => r !== null));
 }
 
