@@ -32,6 +32,18 @@ list_pages → get_page_by_name → (node-level fetch) → validate_yaml → upd
 list_pages → get_page_by_name → update widget-tree-outline + push individual node files → validate_yaml → update_project_yaml
 ```
 
+### Creating a Reusable Component
+```
+Design params → construct metadata + tree outline + root node (isDummyRoot) + child nodes → validate_yaml → update_project_yaml
+```
+See `get_yaml_docs(topic: "create component")` for full walkthrough with examples.
+
+### Refactoring Page Widgets into a Component
+```
+get_page_by_name → identify subtree → create component files → replace page subtree with componentClassKeyRef → push all files together
+```
+See `get_yaml_docs(topic: "refactor")` for step-by-step guide.
+
 ### Finding Usages
 ```
 find_component_usages(componentName: "MyComponent") — where is a component used?

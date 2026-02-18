@@ -411,3 +411,294 @@ node:
 - **Component node files** follow the exact same structure as page node files. The only difference is the file key prefix (`component/` vs `page/`).
 - **The tree outline key** is `component-widget-tree-outline` (not `page-widget-tree-outline`).
 - **CALLBACK triggers** appear when an Action parameter is executed from a child widget that is itself a component reference. The trigger key includes the param key (e.g., `CALLBACK-bins86`).
+
+---
+
+## 10. Creating a New Component
+
+Creating a component requires pushing multiple files in a **single** `update_project_yaml` call, similar to adding widgets to a page.
+
+### Required files
+
+| # | File Key | Purpose |
+|---|----------|---------|
+| 1 | `component/id-Container_XXX` | Component metadata (name, params, state) |
+| 2 | `component/id-Container_XXX/component-widget-tree-outline` | Widget tree hierarchy |
+| 3 | `component/id-Container_XXX/component-widget-tree-outline/node/id-Container_XXX` | Root Container node (`isDummyRoot: true`) |
+| 4 | `component/id-Container_XXX/component-widget-tree-outline/node/id-Widget_YYY` | One file per child widget |
+
+### Step-by-step example
+
+**Task:** Create a reusable `DealCard` component with `title` (String), `subtitle` (String), and `onTap` (Action) parameters.
+
+**File 1 — Component metadata:**
+```yaml
+# File key: component/id-Container_dc01root
+name: DealCard
+description: "Reusable card displaying a deal with title, subtitle, and tap action"
+params:
+  p1titl:
+    identifier:
+      name: title
+      key: p1titl
+    dataType:
+      scalarType: String
+      nonNullable: true
+  p2subt:
+    identifier:
+      name: subtitle
+      key: p2subt
+    dataType:
+      scalarType: String
+      nonNullable: false
+  p3tap:
+    identifier:
+      name: onTap
+      key: p3tap
+    dataType:
+      scalarType: Action
+      nonNullable: false
+node:
+  key: Container_dc01root
+```
+
+**File 2 — Widget tree outline:**
+```yaml
+# File key: component/id-Container_dc01root/component-widget-tree-outline
+node:
+  key: Container_dc01root
+  children:
+    - key: Container_dc01card
+      children:
+        - key: Column_dc01col
+          children:
+            - key: Text_dc01titl
+            - key: Text_dc01sub
+```
+
+**File 3 — Root Container node:**
+```yaml
+# File key: component/id-Container_dc01root/component-widget-tree-outline/node/id-Container_dc01root
+key: Container_dc01root
+type: Container
+props:
+  container:
+    boxDecoration:
+      colorValue:
+        inputValue:
+          value: "0"
+        mostRecentInputValue:
+          value: "0"
+name: DealCard
+isDummyRoot: true
+```
+
+> The root Container must have `isDummyRoot: true` and a transparent background (`value: "0"`). This marks it as the component boundary — the actual visual content starts with the first child.
+
+**File 4 — Card container node:**
+```yaml
+# File key: component/id-Container_dc01root/component-widget-tree-outline/node/id-Container_dc01card
+key: Container_dc01card
+type: Container
+props:
+  container:
+    boxDecoration:
+      colorValue:
+        inputValue:
+          themeColor: SECONDARY_BACKGROUND
+        mostRecentInputValue:
+          themeColor: SECONDARY_BACKGROUND
+      borderRadiusValue:
+        inputValue: 12
+        mostRecentInputValue: 12
+  paddingValue:
+    inputValue: "16,16,16,16"
+    mostRecentInputValue: "16,16,16,16"
+  widthValue:
+    inputValue: "double.infinity"
+    mostRecentInputValue: "double.infinity"
+  responsiveVisibility: {}
+parameterValues: {}
+valueKey: {}
+```
+
+**File 5 — Column node:**
+```yaml
+# File key: component/id-Container_dc01root/component-widget-tree-outline/node/id-Column_dc01col
+key: Column_dc01col
+type: Column
+props:
+  column:
+    crossAxisAlignmentValue:
+      inputValue: START
+      mostRecentInputValue: START
+  responsiveVisibility: {}
+parameterValues: {}
+valueKey: {}
+```
+
+**File 6 — Title text (references component parameter):**
+```yaml
+# File key: component/id-Container_dc01root/component-widget-tree-outline/node/id-Text_dc01titl
+key: Text_dc01titl
+type: Text
+props:
+  text:
+    themeStyle: TITLE_MEDIUM
+    selectable: false
+    textValue:
+      variable:
+        source: WIDGET_CLASS_PARAMETER
+        baseVariable:
+          widgetClass:
+            paramIdentifier:
+              name: title
+              key: p1titl
+        nodeKeyRef:
+          key: Container_dc01root
+    colorValue:
+      inputValue:
+        themeColor: PRIMARY_TEXT
+    fontWeightValue:
+      inputValue: w600
+  responsiveVisibility: {}
+parameterValues: {}
+valueKey: {}
+```
+
+> To display a component parameter, use `source: WIDGET_CLASS_PARAMETER` with `baseVariable.widgetClass.paramIdentifier` pointing to the param key. `nodeKeyRef.key` must point to the component's root Container ID.
+
+**File 7 — Subtitle text:**
+```yaml
+# File key: component/id-Container_dc01root/component-widget-tree-outline/node/id-Text_dc01sub
+key: Text_dc01sub
+type: Text
+props:
+  text:
+    themeStyle: BODY_MEDIUM
+    selectable: false
+    textValue:
+      variable:
+        source: WIDGET_CLASS_PARAMETER
+        baseVariable:
+          widgetClass:
+            paramIdentifier:
+              name: subtitle
+              key: p2subt
+        nodeKeyRef:
+          key: Container_dc01root
+    colorValue:
+      inputValue:
+        themeColor: SECONDARY_TEXT
+  responsiveVisibility: {}
+parameterValues: {}
+valueKey: {}
+```
+
+**Push all files in one call:**
+```
+update_project_yaml(projectId, {
+  "component/id-Container_dc01root": metadataYaml,
+  "component/id-Container_dc01root/component-widget-tree-outline": treeOutlineYaml,
+  "component/id-Container_dc01root/component-widget-tree-outline/node/id-Container_dc01root": rootNodeYaml,
+  "component/id-Container_dc01root/component-widget-tree-outline/node/id-Container_dc01card": cardNodeYaml,
+  "component/id-Container_dc01root/component-widget-tree-outline/node/id-Column_dc01col": columnNodeYaml,
+  "component/id-Container_dc01root/component-widget-tree-outline/node/id-Text_dc01titl": titleNodeYaml,
+  "component/id-Container_dc01root/component-widget-tree-outline/node/id-Text_dc01sub": subtitleNodeYaml
+})
+```
+
+### Using the new component in a page
+
+After creating the component, embed it in a page by adding a Container node with `componentClassKeyRef`:
+
+```yaml
+# Node in the host page
+key: Container_hostref1
+type: Container
+props:
+  expanded:
+    expandedType: UNEXPANDED
+  responsiveVisibility: {}
+parameterValues:
+  parameterPasses:
+    p1titl:
+      paramIdentifier:
+        name: title
+        key: p1titl
+      inputValue:
+        serializedValue: "50% Off Coffee"
+    p2subt:
+      paramIdentifier:
+        name: subtitle
+        key: p2subt
+      inputValue:
+        serializedValue: "Valid until end of month"
+  widgetClassNodeKeyRef:
+    key: Container_dc01root
+componentClassKeyRef:
+  key: Container_dc01root
+```
+
+For Action-type parameters, use `executeCallbackAction` inside the component:
+```yaml
+# Action inside the component that invokes the onTap callback
+key: act01tap
+executeCallbackAction:
+  parameterIdentifier:
+    name: onTap
+    key: p3tap
+```
+
+---
+
+## 11. Refactoring Page Widgets into a Component
+
+To extract existing page widgets into a reusable component:
+
+### Step 1: Identify the widget subtree to extract
+
+Use `get_page_summary` or `get_page_by_name` to find the subtree you want to extract. Note the root widget key and all descendant keys.
+
+### Step 2: Decide on component parameters
+
+Any data that was previously hardcoded or came from page state/params needs to become a component parameter. Common patterns:
+
+| Was | Becomes |
+|-----|---------|
+| Hardcoded text | String parameter |
+| Page state variable | Parameter passed from page |
+| Page parameter | Parameter passed from page |
+| Navigation action | Action (callback) parameter |
+| API call result | Parameter or kept internal |
+
+### Step 3: Create component files
+
+1. **Metadata file** — Define `name`, `params`, and optionally `classModel.stateFields`
+2. **Tree outline** — Copy the subtree from the page's `page-widget-tree-outline`, wrapping it under a new root Container with `isDummyRoot: true`
+3. **Root node** — Create the `isDummyRoot: true` Container
+4. **Child nodes** — Copy existing node files from the page, changing file key prefix from `page/id-Scaffold_XXX/page-widget-tree-outline/node/` to `component/id-Container_XXX/component-widget-tree-outline/node/`
+5. **Update data references** — Replace hardcoded values with `WIDGET_CLASS_PARAMETER` variable references
+
+### Step 4: Update the page
+
+1. **Remove extracted nodes** from the page's tree outline
+2. **Replace with a component reference** — Add a single Container node with `componentClassKeyRef` pointing to the new component
+3. **Pass parameters** via `parameterValues.parameterPasses`
+
+### Step 5: Push everything in one call
+
+Push all component files AND the updated page files in a single `update_project_yaml` call to avoid an inconsistent state.
+
+### Checklist
+
+- [ ] Component metadata has correct `name` and `node.key`
+- [ ] All params have unique keys (5-6 char alphanumeric)
+- [ ] Root Container has `isDummyRoot: true` and transparent background
+- [ ] Tree outline uses `children` (not `body`) under the root node
+- [ ] All file keys use `component/` prefix (not `page/`)
+- [ ] Tree outline key is `component-widget-tree-outline` (not `page-widget-tree-outline`)
+- [ ] Parameter references use `source: WIDGET_CLASS_PARAMETER` with correct `nodeKeyRef`
+- [ ] Host Container has both `componentClassKeyRef.key` and `parameterValues.widgetClassNodeKeyRef.key` pointing to the same component root ID
+- [ ] Action callbacks use `executeCallbackAction` with correct `parameterIdentifier`
+- [ ] Validated all files before pushing

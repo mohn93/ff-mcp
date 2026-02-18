@@ -413,7 +413,28 @@ When passing YAML content to `validate_yaml` and `update_project_yaml`:
 
 ---
 
-## 8. Recommended Workflow Patterns
+## 8. Creating and Refactoring Components
+
+For full details on creating new components and refactoring page widgets into reusable components, see **[03-components.md](03-components.md)** sections 10-11.
+
+### Quick reference
+
+**Creating a new component** requires pushing in a single call:
+1. Component metadata (`component/id-Container_XXX`) — name, params, state
+2. Widget tree outline (`component/id-Container_XXX/component-widget-tree-outline`) — uses `children` not `body`
+3. Root Container node with `isDummyRoot: true` — transparent background
+4. Individual child node files — same structure as page nodes
+
+**Refactoring page widgets into a component:**
+1. Identify the subtree to extract
+2. Create component files (metadata + tree outline + root node + child nodes)
+3. Replace original page nodes with a single Container referencing the component via `componentClassKeyRef`
+4. Pass data through `parameterValues.parameterPasses`
+5. Push all files (component + updated page) in one `update_project_yaml` call
+
+---
+
+## 9. Recommended Workflow Patterns
 
 ### Inspecting a project for the first time
 
@@ -443,6 +464,28 @@ list_pages(projectId)
   --> [construct tree outline + node files]
   --> validate_yaml for each file
   --> update_project_yaml(projectId, { treeOutlineKey: ..., nodeKey1: ..., nodeKey2: ... })
+```
+
+### Creating a reusable component
+
+```
+[design component params and widget tree]
+  --> [construct metadata + tree outline + root node + child nodes]
+  --> validate_yaml for each file
+  --> update_project_yaml(projectId, { metadataKey: ..., treeKey: ..., rootNode: ..., childNodes: ... })
+```
+
+See [03-components.md](03-components.md) sections 10-11 for complete walkthrough.
+
+### Refactoring page widgets into a component
+
+```
+get_page_by_name(projectId, "PageName")
+  --> [identify subtree to extract, note all widget keys]
+  --> [create component files: metadata, tree outline, root node, child nodes]
+  --> [replace page subtree with componentClassKeyRef Container]
+  --> validate_yaml for all files
+  --> update_project_yaml(projectId, { ...componentFiles, ...updatedPageFiles })
 ```
 
 ### Understanding navigation flow
