@@ -189,6 +189,8 @@ async function enrichNode(
     name: nodeInfo.name,
     slot: outline.slot,
     detail: nodeInfo.detail,
+    componentRef: nodeInfo.componentRef,
+    componentId: nodeInfo.componentId,
     triggers,
     children,
   };
@@ -201,7 +203,7 @@ async function enrichNode(
 export function registerGetPageSummaryTool(server: McpServer) {
   server.tool(
     "get_page_summary",
-    "Get a readable summary of a FlutterFlow page from local cache — widget tree, actions, params, state. No API calls. Run sync_project first if not cached.",
+    "Get a readable summary of a FlutterFlow page from local cache — widget tree, actions, params, state. Component references are resolved to show [ComponentName] (ComponentId) instead of plain Container. Use the ComponentId with get_component_summary to drill into a component. No API calls. Run sync_project first if not cached.",
     {
       projectId: z.string().describe("The FlutterFlow project ID"),
       pageName: z

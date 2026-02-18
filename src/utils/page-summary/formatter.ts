@@ -27,7 +27,15 @@ function nodeLabel(node: SummaryNode): string {
   const parts: string[] = [];
 
   parts.push(fmtSlot(node.slot));
-  parts.push(node.type);
+
+  if (node.componentRef) {
+    parts.push(`[${node.componentRef}]`);
+    if (node.componentId) {
+      parts.push(` (${node.componentId})`);
+    }
+  } else {
+    parts.push(node.type);
+  }
 
   if (node.name) {
     parts.push(` (${node.name})`);

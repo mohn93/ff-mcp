@@ -219,6 +219,60 @@ describe("get_page_summary handler", () => {
     expect(mockedFormatPageSummary).toHaveBeenCalled();
   });
 
+  it("passes componentRef and componentId from extractNodeInfo to the SummaryNode", async () => {
+    mockedCacheMeta.mockResolvedValue({
+      lastSyncedAt: "2025-01-01",
+      fileCount: 10,
+      syncMethod: "bulk",
+    });
+
+    mockedCacheRead.mockImplementation(async (_pid, key) => {
+      if (key === "page/id-Scaffold_abc") return "name: TestPage";
+      if (key === "folders") return "";
+      if (key === "page/id-Scaffold_abc/page-widget-tree-outline") return "outline";
+      return null;
+    });
+
+    mockedListCachedKeys.mockResolvedValue(["page/id-Scaffold_abc"]);
+    mockedParseFolders.mockReturnValue({});
+
+    // Tree has root scaffold with one child container (component ref)
+    mockedParseTreeOutline.mockReturnValue({
+      key: "Scaffold_abc",
+      children: [
+        { key: "Container_host", children: [], slot: "body" },
+      ],
+      slot: undefined,
+    });
+
+    // Root scaffold node - no component ref
+    mockedExtractNodeInfo.mockImplementation(async (_pid, _prefix, nodeKey) => {
+      if (nodeKey === "Scaffold_abc") {
+        return { type: "Scaffold", name: "", detail: "" };
+      }
+      // Child container is a component reference
+      return {
+        type: "Container",
+        name: "",
+        detail: "",
+        componentRef: "Header",
+        componentId: "Container_ur4ml9qw",
+      };
+    });
+
+    mockedSummarizeTriggers.mockResolvedValue([]);
+    mockedFormatPageSummary.mockReturnValue("formatted");
+
+    const handler = getHandler("get_page_summary");
+    await handler({ projectId: "proj-1", scaffoldId: "Scaffold_abc" });
+
+    // Verify the SummaryNode passed to formatter has componentRef/componentId
+    const summaryTree = mockedFormatPageSummary.mock.calls[0][1];
+    const childNode = summaryTree.children[0];
+    expect(childNode.componentRef).toBe("Header");
+    expect(childNode.componentId).toBe("Container_ur4ml9qw");
+  });
+
   it("returns error when widget tree outline is not cached", async () => {
     mockedCacheMeta.mockResolvedValue({
       lastSyncedAt: "2025-01-01",

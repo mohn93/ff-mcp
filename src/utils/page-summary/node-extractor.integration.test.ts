@@ -223,4 +223,114 @@ describe("extractNodeInfo", () => {
     expect(info.type).toBe("Image");
     expect(info.detail).toBe("[dynamic]");
   });
+
+  // -------------------------------------------------------------------------
+  // Component reference resolution
+  // -------------------------------------------------------------------------
+
+  it("resolves componentRef and componentId when componentClassKeyRef is present", async () => {
+    mockedCacheRead.mockImplementation(async (_pid, key) => {
+      if (key === `${PAGE_PREFIX}/node/id-Container_host1`) {
+        return [
+          "key: Container_host1",
+          "type: Container",
+          "props: {}",
+          "parameterValues:",
+          "  widgetClassNodeKeyRef:",
+          "    key: Container_ur4ml9qw",
+          "componentClassKeyRef:",
+          "  key: Container_ur4ml9qw",
+        ].join("\n");
+      }
+      if (key === "component/id-Container_ur4ml9qw") {
+        return "name: Header\ndescription: Top navigation bar";
+      }
+      return null;
+    });
+
+    const info = await extractNodeInfo(PROJECT_ID, PAGE_PREFIX, "Container_host1");
+    expect(info.type).toBe("Container");
+    expect(info.componentRef).toBe("Header");
+    expect(info.componentId).toBe("Container_ur4ml9qw");
+  });
+
+  it("returns componentId but undefined componentRef when component definition not found", async () => {
+    mockedCacheRead.mockImplementation(async (_pid, key) => {
+      if (key === `${PAGE_PREFIX}/node/id-Container_orphan`) {
+        return [
+          "key: Container_orphan",
+          "type: Container",
+          "props: {}",
+          "componentClassKeyRef:",
+          "  key: Container_missing",
+        ].join("\n");
+      }
+      // component definition not in cache
+      return null;
+    });
+
+    const info = await extractNodeInfo(PROJECT_ID, PAGE_PREFIX, "Container_orphan");
+    expect(info.type).toBe("Container");
+    expect(info.componentId).toBe("Container_missing");
+    expect(info.componentRef).toBeUndefined();
+  });
+
+  it("returns no componentRef or componentId for regular widgets without componentClassKeyRef", async () => {
+    mockedCacheRead.mockResolvedValue(
+      [
+        "key: Column_plain",
+        "type: Column",
+        "props:",
+        "  column:",
+        "    crossAxisAlignmentValue:",
+        "      inputValue: START",
+      ].join("\n")
+    );
+
+    const info = await extractNodeInfo(PROJECT_ID, PAGE_PREFIX, "Column_plain");
+    expect(info.type).toBe("Column");
+    expect(info.componentRef).toBeUndefined();
+    expect(info.componentId).toBeUndefined();
+  });
+
+  it("returns no componentRef when cache returns null (fallback path)", async () => {
+    mockedCacheRead.mockResolvedValue(null);
+
+    const info = await extractNodeInfo(PROJECT_ID, PAGE_PREFIX, "Container_gone");
+    expect(info.type).toBe("Container");
+    expect(info.componentRef).toBeUndefined();
+    expect(info.componentId).toBeUndefined();
+  });
+
+  it("resolves componentRef with parameter passes present", async () => {
+    mockedCacheRead.mockImplementation(async (_pid, key) => {
+      if (key === `${PAGE_PREFIX}/node/id-Container_withparams`) {
+        return [
+          "key: Container_withparams",
+          "type: Container",
+          "props: {}",
+          "parameterValues:",
+          "  parameterPasses:",
+          "    cqmxop:",
+          "      paramIdentifier:",
+          "        name: isSearch",
+          "        key: cqmxop",
+          "      inputValue:",
+          '        serializedValue: "false"',
+          "  widgetClassNodeKeyRef:",
+          "    key: Container_pgvko7fz",
+          "componentClassKeyRef:",
+          "  key: Container_pgvko7fz",
+        ].join("\n");
+      }
+      if (key === "component/id-Container_pgvko7fz") {
+        return "name: PostsList\ndescription: Feed list";
+      }
+      return null;
+    });
+
+    const info = await extractNodeInfo(PROJECT_ID, PAGE_PREFIX, "Container_withparams");
+    expect(info.componentRef).toBe("PostsList");
+    expect(info.componentId).toBe("Container_pgvko7fz");
+  });
 });

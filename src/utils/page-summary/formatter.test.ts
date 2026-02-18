@@ -16,6 +16,8 @@ function node(
     name: overrides.name ?? "",
     slot: overrides.slot ?? "children",
     detail: overrides.detail ?? "",
+    componentRef: overrides.componentRef,
+    componentId: overrides.componentId,
     triggers: overrides.triggers ?? [],
     children: overrides.children ?? [],
   };
@@ -50,6 +52,8 @@ function rootNode(overrides: Partial<SummaryNode> = {}): SummaryNode {
     name: overrides.name ?? "",
     slot: overrides.slot ?? "root",
     detail: overrides.detail ?? "",
+    componentRef: overrides.componentRef,
+    componentId: overrides.componentId,
     triggers: overrides.triggers ?? [],
     children: overrides.children ?? [],
   };
@@ -379,6 +383,138 @@ describe("formatPageSummary", () => {
     });
   });
 
+  describe("component references", () => {
+    it("renders component name in brackets with ID in parentheses", () => {
+      const tree = rootNode({
+        children: [
+          node({
+            key: "Container_host1",
+            type: "Container",
+            componentRef: "Header",
+            componentId: "Container_ur4ml9qw",
+          }),
+        ],
+      });
+      const output = formatPageSummary(pageMeta(), tree);
+      expect(output).toContain("[Header] (Container_ur4ml9qw)");
+    });
+
+    it("renders regular Container when no componentRef", () => {
+      const tree = rootNode({
+        children: [
+          node({ key: "Container_plain", type: "Container" }),
+        ],
+      });
+      const output = formatPageSummary(pageMeta(), tree);
+      expect(output).toContain("Container");
+      expect(output).not.toContain("[Container]");
+    });
+
+    it("renders component ref without ID when componentId is undefined", () => {
+      const tree = rootNode({
+        children: [
+          node({
+            key: "Container_host2",
+            type: "Container",
+            componentRef: "SearchBar",
+          }),
+        ],
+      });
+      const output = formatPageSummary(pageMeta(), tree);
+      expect(output).toContain("[SearchBar]");
+      expect(output).not.toContain("(Container_");
+    });
+
+    it("renders component ref with triggers inline", () => {
+      const tree = rootNode({
+        children: [
+          node({
+            key: "Container_host3",
+            type: "Container",
+            componentRef: "PostsList",
+            componentId: "Container_pgvko7fz",
+            triggers: [
+              {
+                trigger: "CALLBACK",
+                actions: [{ type: "updateState", detail: "" }],
+              },
+            ],
+          }),
+        ],
+      });
+      const output = formatPageSummary(pageMeta(), tree);
+      expect(output).toContain(
+        "[PostsList] (Container_pgvko7fz) \u2192 CALLBACK \u2192 [updateState]"
+      );
+    });
+
+    it("renders multiple component refs as siblings", () => {
+      const tree = rootNode({
+        children: [
+          node({
+            key: "Container_h1",
+            type: "Container",
+            componentRef: "Header",
+            componentId: "Container_aaa",
+          }),
+          node({
+            key: "Container_h2",
+            type: "Container",
+            componentRef: "SearchBar",
+            componentId: "Container_bbb",
+          }),
+          node({
+            key: "Container_h3",
+            type: "Container",
+            componentRef: "PostsList",
+            componentId: "Container_ccc",
+          }),
+        ],
+      });
+      const output = formatPageSummary(pageMeta(), tree);
+      expect(output).toContain("[Header] (Container_aaa)");
+      expect(output).toContain("[SearchBar] (Container_bbb)");
+      expect(output).toContain("[PostsList] (Container_ccc)");
+    });
+
+    it("renders component ref with slot prefix", () => {
+      const tree = rootNode({
+        children: [
+          node({
+            key: "Container_slot",
+            type: "Container",
+            slot: "body",
+            componentRef: "MainContent",
+            componentId: "Container_mc",
+          }),
+        ],
+      });
+      const output = formatPageSummary(pageMeta(), tree);
+      expect(output).toContain("[body] [MainContent] (Container_mc)");
+    });
+
+    it("renders nested component refs at any depth", () => {
+      const tree = rootNode({
+        children: [
+          node({
+            key: "Column_a",
+            type: "Column",
+            children: [
+              node({
+                key: "Container_nested",
+                type: "Container",
+                componentRef: "NestedWidget",
+                componentId: "Container_nw",
+              }),
+            ],
+          }),
+        ],
+      });
+      const output = formatPageSummary(pageMeta(), tree);
+      expect(output).toContain("[NestedWidget] (Container_nw)");
+    });
+  });
+
   describe("full output structure", () => {
     it("produces correct complete output for a typical page", () => {
       const meta = pageMeta({
@@ -539,6 +675,25 @@ describe("formatComponentSummary", () => {
       const output = formatComponentSummary(componentMeta(), tree);
       expect(output).toContain("Widget Tree:");
       expect(output).toContain("\u2514\u2500\u2500 Row");
+    });
+  });
+
+  describe("nested component references", () => {
+    it("renders nested component ref inside a component", () => {
+      const tree = rootNode({
+        key: "Container_outer",
+        type: "Container",
+        children: [
+          node({
+            key: "Container_inner",
+            type: "Container",
+            componentRef: "InnerWidget",
+            componentId: "Container_iw123",
+          }),
+        ],
+      });
+      const output = formatComponentSummary(componentMeta(), tree);
+      expect(output).toContain("[InnerWidget] (Container_iw123)");
     });
   });
 

@@ -21,6 +21,8 @@ export interface SummaryNode {
   name: string;             // human-readable name from node file, or ""
   slot: string;             // e.g. "body", "appBar", "children", "header"
   detail: string;           // extracted info: text value, image path, hint, etc.
+  componentRef?: string;    // resolved component name if this node is a component instance
+  componentId?: string;     // component container ID (e.g. "Container_ur4ml9qw") for retrieval
   triggers: TriggerSummary[];
   children: SummaryNode[];
 }

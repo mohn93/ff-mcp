@@ -9,6 +9,8 @@ export interface NodeInfo {
   type: string;
   name: string;
   detail: string;
+  componentRef?: string;  // resolved component name if this node is a component instance
+  componentId?: string;   // component container ID for retrieval
 }
 
 /**
@@ -175,6 +177,22 @@ export function inferTypeFromKey(key: string): string {
 }
 
 /**
+ * Resolve a component reference to its human-readable name.
+ * Reads the component definition file from cache (e.g. "component/id-Container_xxx").
+ */
+async function resolveComponentName(
+  projectId: string,
+  componentKey: string
+): Promise<string | undefined> {
+  const compFileKey = `component/id-${componentKey}`;
+  const content = await cacheRead(projectId, compFileKey);
+  if (!content) return undefined;
+
+  const nameMatch = content.match(/^name:\s*(.+)$/m);
+  return nameMatch ? nameMatch[1].trim() : undefined;
+}
+
+/**
  * Read a node's cached file and extract type, name, and detail.
  *
  * @param projectId - The FF project ID
@@ -204,7 +222,16 @@ export async function extractNodeInfo(
     const props = (doc.props as Record<string, unknown>) || {};
     const detail = extractDetail(type, props);
 
-    return { type, name, detail };
+    // Check for component reference
+    const compRef = doc.componentClassKeyRef as Record<string, unknown> | undefined;
+    let componentRef: string | undefined;
+    let componentId: string | undefined;
+    if (compRef?.key && typeof compRef.key === "string") {
+      componentId = compRef.key;
+      componentRef = await resolveComponentName(projectId, componentId);
+    }
+
+    return { type, name, detail, componentRef, componentId };
   } catch {
     return {
       type: inferTypeFromKey(nodeKey),

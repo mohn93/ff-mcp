@@ -1,6 +1,6 @@
 {
   "name": "flutterflow-mcp",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "MCP server for the FlutterFlow Project API — AI-assisted FlutterFlow development through Claude and other MCP-compatible clients",
   "type": "module",
   "main": "build/index.js",

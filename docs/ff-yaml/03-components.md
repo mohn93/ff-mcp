@@ -414,7 +414,67 @@ node:
 
 ---
 
-## 10. Creating a New Component
+## 10. Components in Summary Output
+
+The `get_page_summary` and `get_component_summary` tools resolve component references and display them with a distinct format in the widget tree. This makes it easy to distinguish regular widgets from embedded components at a glance.
+
+### Format
+
+Component instances appear as `[ComponentName] (Container_ID)` instead of just `Container`:
+
+```
+FeedHomePage (Scaffold_e5ows2lg) — folder: home
+
+ON_INIT_STATE → [customAction: checkNotificationPermissionResult, ...]
+
+Widget Tree:
+└── [body] Container
+    └── Column
+        └── Column
+            ├── [Header] (Container_ur4ml9qw)
+            ├── [SearchBar] (Container_qw4kqc4l)
+            └── Container
+                └── [PostsList] (Container_pgvko7fz)
+```
+
+### Reading the output
+
+| Element | Meaning |
+|---|---|
+| `Container`, `Column`, `Row`, etc. | Regular widget — defined inline on this page/component |
+| `[Header] (Container_ur4ml9qw)` | Component instance — `Header` is the component name, `Container_ur4ml9qw` is the component ID |
+| `[body]`, `[appBar]`, etc. | Slot prefix — which slot of the parent widget this node fills |
+| `→ ON_TAP → [navigate: to page]` | Trigger — action(s) attached to this widget |
+
+### Drilling into components
+
+The component ID in parentheses (e.g. `Container_ur4ml9qw`) can be used to retrieve the full component structure:
+
+- **`get_component_summary`** — pass `componentId: "Container_ur4ml9qw"` (or `componentName: "Header"`) to see the component's internal widget tree, params, and actions
+- **`get_project_yaml`** — pass `fileName: "component/id-Container_ur4ml9qw"` to get the raw component metadata YAML
+- **`find_component_usages`** — pass `componentId: "Container_ur4ml9qw"` to find all pages and components where this component is used
+
+### Nested components
+
+Components can contain other components. The same `[Name] (ID)` format appears at any nesting level:
+
+```
+PostsList (Container_pgvko7fz)
+Params: customAudienceFilter (Enum), profileUserId (String), fetchType (Enum), itemId (String)
+
+Widget Tree:
+└── ConditionalBuilder
+    ├── PlaceholderWidget
+    │   └── ListView
+    │       └── [PostCard] (Container_abc12345) → CALLBACK → [updateState]
+    └── PlaceholderWidget
+        └── Column
+            └── [EmptyState] (Container_xyz98765)
+```
+
+---
+
+## 11. Creating a New Component
 
 Creating a component requires pushing multiple files in a **single** `update_project_yaml` call, similar to adding widgets to a page.
 
@@ -652,7 +712,7 @@ executeCallbackAction:
 
 ---
 
-## 11. Refactoring Page Widgets into a Component
+## 12. Refactoring Page Widgets into a Component
 
 To extract existing page widgets into a reusable component:
 

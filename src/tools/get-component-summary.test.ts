@@ -197,6 +197,56 @@ describe("get_component_summary handler", () => {
     expect(mockedFormatComponentSummary).toHaveBeenCalled();
   });
 
+  it("passes componentRef and componentId from extractNodeInfo to the SummaryNode", async () => {
+    mockedCacheMeta.mockResolvedValue({
+      lastSyncedAt: "2025-01-01",
+      fileCount: 10,
+      syncMethod: "bulk",
+    });
+
+    mockedCacheRead.mockImplementation(async (_pid, key) => {
+      if (key === "component/id-Container_abc") return "name: ParentComp\ndescription: ''";
+      if (key === "component/id-Container_abc/component-widget-tree-outline")
+        return "outline";
+      return null;
+    });
+
+    mockedListCachedKeys.mockResolvedValue(["component/id-Container_abc"]);
+
+    // Tree has root container with one nested component ref
+    mockedParseTreeOutline.mockReturnValue({
+      key: "Container_abc",
+      children: [
+        { key: "Container_nested", children: [], slot: "children" },
+      ],
+      slot: undefined,
+    });
+
+    mockedExtractNodeInfo.mockImplementation(async (_pid, _prefix, nodeKey) => {
+      if (nodeKey === "Container_abc") {
+        return { type: "Container", name: "ParentComp", detail: "" };
+      }
+      return {
+        type: "Container",
+        name: "",
+        detail: "",
+        componentRef: "ChildWidget",
+        componentId: "Container_child123",
+      };
+    });
+
+    mockedSummarizeTriggers.mockResolvedValue([]);
+    mockedFormatComponentSummary.mockReturnValue("formatted");
+
+    const handler = getHandler("get_component_summary");
+    await handler({ projectId: "proj-1", componentId: "Container_abc" });
+
+    const summaryTree = mockedFormatComponentSummary.mock.calls[0][1];
+    const childNode = summaryTree.children[0];
+    expect(childNode.componentRef).toBe("ChildWidget");
+    expect(childNode.componentId).toBe("Container_child123");
+  });
+
   it("returns error when widget tree outline is not cached", async () => {
     mockedCacheMeta.mockResolvedValue({
       lastSyncedAt: "2025-01-01",
