@@ -12,6 +12,7 @@ import {
   listCachedKeys,
 } from "../utils/cache.js";
 import { resolveComponent } from "./get-component-summary.js";
+import { batchProcess } from "../utils/batch-process.js";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -33,21 +34,6 @@ interface Usage {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/** Batch-process items in groups to avoid overwhelming the file system. */
-async function batchProcess<T, R>(
-  items: T[],
-  batchSize: number,
-  fn: (item: T) => Promise<R>
-): Promise<R[]> {
-  const results: R[] = [];
-  for (let i = 0; i < items.length; i += batchSize) {
-    const batch = items.slice(i, i + batchSize);
-    const batchResults = await Promise.all(batch.map(fn));
-    results.push(...batchResults);
-  }
-  return results;
-}
 
 /**
  * Resolve the value of a parameter pass to a readable string.

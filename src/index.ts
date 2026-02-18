@@ -22,6 +22,12 @@ import { registerModifyComponentPrompt } from "./prompts/modify-component.js";
 import { registerInspectProjectPrompt } from "./prompts/inspect-project.js";
 import { registerDevWorkflowPrompt } from "./prompts/dev-workflow.js";
 import { registerGetYamlDocsTool } from "./tools/get-yaml-docs.js";
+import { registerGetAppStateTool } from "./tools/get-app-state.js";
+import { registerGetApiEndpointsTool } from "./tools/get-api-endpoints.js";
+import { registerGetDataModelsTool } from "./tools/get-data-models.js";
+import { registerGetCustomCodeTool } from "./tools/get-custom-code.js";
+import { registerGetProjectConfigTool } from "./tools/get-project-config.js";
+import { registerGetThemeTool } from "./tools/get-theme.js";
 
 const server = new McpServer({
   name: "ff-mcp",
@@ -44,6 +50,12 @@ registerGetComponentSummaryTool(server);
 registerFindComponentUsagesTool(server);
 registerFindPageNavigationsTool(server);
 registerGetYamlDocsTool(server);
+registerGetAppStateTool(server);
+registerGetApiEndpointsTool(server);
+registerGetDataModelsTool(server);
+registerGetCustomCodeTool(server);
+registerGetProjectConfigTool(server);
+registerGetThemeTool(server);
 
 // Register resources
 registerResources(server, client);

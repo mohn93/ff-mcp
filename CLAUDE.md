@@ -14,7 +14,7 @@ npm run dev            # Watch mode (tsc --watch)
 npm start              # Run the server (node build/index.js)
 ```
 
-No test framework is configured. No linter is configured. Verify changes by running `npm run build` — a clean compile is the primary validation.
+Tests use **vitest**. Run `npm test` to execute all tests. No linter is configured. Verify changes by running `npm run build` and `npm test`.
 
 ## Environment
 
@@ -32,7 +32,7 @@ Requires `FLUTTERFLOW_API_TOKEN` env var (Bearer token from FlutterFlow > Accoun
 
 Every tool/resource/prompt follows the same pattern: a `register*` function that takes `(server, client?)` and calls `server.tool()`, `server.resource()`, or `server.prompt()`. New tools go in `src/tools/`, new prompts in `src/prompts/`, new resources in `src/resources/`. Register them in `src/index.ts`.
 
-### Tools (13)
+### Tools (19)
 
 | Tool | File | Purpose |
 |------|------|---------|
@@ -49,12 +49,20 @@ Every tool/resource/prompt follows the same pattern: a `register*` function that
 | `find_component_usages` | `tools/find-component-usages.ts` | Find all pages/components using a component |
 | `find_page_navigations` | `tools/find-page-navigations.ts` | Find all navigation actions targeting a page |
 | `get_yaml_docs` | `tools/get-yaml-docs.ts` | Search/retrieve FF YAML reference docs by topic or file |
+| `get_app_state` | `tools/get-app-state.ts` | Cache-based app state, constants, and environment settings |
+| `get_api_endpoints` | `tools/get-api-endpoints.ts` | Cache-based API endpoint definitions (method, URL, variables, headers, response) |
+| `get_data_models` | `tools/get-data-models.ts` | Cache-based data structs, enums, Firestore collections, Supabase tables |
+| `get_custom_code` | `tools/get-custom-code.ts` | Cache-based custom actions, functions, widgets, AI agents (with optional Dart source) |
+| `get_project_config` | `tools/get-project-config.ts` | Cache-based project config (app details, auth, nav bar, permissions, services) |
+| `get_theme` | `tools/get-theme.ts` | Cache-based theme colors, typography, breakpoints, widget defaults |
 
 ### Utilities
 
 - `utils/decode-yaml.ts` — `decodeProjectYamlResponse()`: base64 → adm-zip → `Record<string, string>`
 - `utils/parse-folders.ts` — `parseFolderMapping()`: regex-based extraction of scaffold→folder mapping from the `folders` YAML file
 - `utils/cache.ts` — Local cache functions: `cacheRead`, `cacheWrite`, `cacheWriteBulk`, `cacheMeta`, `listCachedKeys`
+- `utils/resolve-data-type.ts` — `resolveDataType()`: resolves FF data type objects to readable strings (e.g. `List<String>`, `DataStruct:MyStruct`)
+- `utils/batch-process.ts` — `batchProcess()`: process items in parallel batches to avoid overwhelming the file system
 
 ## FlutterFlow YAML Conventions
 

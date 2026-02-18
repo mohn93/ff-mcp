@@ -12,6 +12,7 @@ import {
   listCachedKeys,
 } from "../utils/cache.js";
 import { resolvePage } from "./get-page-summary.js";
+import { batchProcess } from "../utils/batch-process.js";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -31,20 +32,6 @@ interface NavigationRef {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-async function batchProcess<T, R>(
-  items: T[],
-  batchSize: number,
-  fn: (item: T) => Promise<R>
-): Promise<R[]> {
-  const results: R[] = [];
-  for (let i = 0; i < items.length; i += batchSize) {
-    const batch = items.slice(i, i + batchSize);
-    const batchResults = await Promise.all(batch.map(fn));
-    results.push(...batchResults);
-  }
-  return results;
-}
 
 /**
  * Parse parent context from an action file key.

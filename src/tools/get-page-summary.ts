@@ -22,6 +22,7 @@ import {
   StateFieldInfo,
   SummaryNode,
 } from "../utils/page-summary/types.js";
+import { resolveDataType } from "../utils/resolve-data-type.js";
 
 // ---------------------------------------------------------------------------
 // Page resolution from cache
@@ -80,25 +81,6 @@ export async function resolvePage(
 // ---------------------------------------------------------------------------
 // Metadata extraction
 // ---------------------------------------------------------------------------
-
-/** Resolve a scalar/list data type to a readable string. */
-function resolveDataType(dt: Record<string, unknown>): string {
-  if (dt.listType) {
-    const inner = dt.listType as Record<string, unknown>;
-    return `List<${(inner.scalarType as string) || "unknown"}>`;
-  }
-  if (dt.scalarType === "DataStruct") {
-    const sub = dt.subType as Record<string, unknown> | undefined;
-    const dsi = sub?.dataStructIdentifier as Record<string, unknown> | undefined;
-    return dsi?.name ? `DataStruct:${dsi.name}` : "DataStruct";
-  }
-  if (dt.enumType) {
-    const en = dt.enumType as Record<string, unknown>;
-    const eid = en.enumIdentifier as Record<string, unknown> | undefined;
-    return eid?.name ? `Enum:${eid.name}` : "Enum";
-  }
-  return (dt.scalarType as string) || "unknown";
-}
 
 /** Extract page metadata (name, params, state) from the top-level page YAML. */
 async function extractPageMeta(
