@@ -52,7 +52,7 @@ async function batchProcess<T, R>(
 /**
  * Resolve the value of a parameter pass to a readable string.
  */
-function resolveParamValue(paramObj: Record<string, unknown>): string {
+export function resolveParamValue(paramObj: Record<string, unknown>): string {
   // Check for variable source (e.g. INTERNATIONALIZATION)
   const variable = paramObj.variable as Record<string, unknown> | undefined;
   if (variable) {
@@ -94,7 +94,7 @@ function resolveParamValue(paramObj: Record<string, unknown>): string {
  *   "page/id-Scaffold_xxx/page-widget-tree-outline/node/id-Widget_yyy"
  *   "component/id-Container_xxx/component-widget-tree-outline/node/id-Widget_yyy"
  */
-function parseParentFromKey(fileKey: string): { type: "page" | "component"; id: string } | null {
+export function parseParentFromKey(fileKey: string): { type: "page" | "component"; id: string } | null {
   const pageMatch = fileKey.match(/^page\/id-(Scaffold_\w+)\//);
   if (pageMatch) return { type: "page", id: pageMatch[1] };
 

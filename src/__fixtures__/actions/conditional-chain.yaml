@@ -1,0 +1,14 @@
+conditionActions:
+  trueActions:
+    - trueAction:
+        action:
+          key: action1
+        followUpAction:
+          action:
+            key: action2
+  falseAction:
+    action:
+      key: action3
+  followUpAction:
+    action:
+      key: action4

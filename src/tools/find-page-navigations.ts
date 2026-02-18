@@ -50,7 +50,7 @@ async function batchProcess<T, R>(
  * Parse parent context from an action file key.
  * Example: "page/id-Scaffold_XXX/page-widget-tree-outline/node/id-Widget_YYY/trigger_actions/id-ON_TAP/action/id-zzz"
  */
-function parseActionContext(fileKey: string): {
+export function parseActionContext(fileKey: string): {
   parentType: "page" | "component";
   parentId: string;
   widgetKey: string;
@@ -89,7 +89,7 @@ function parseActionContext(fileKey: string): {
  * Recursively search an object for a navigate action targeting the given scaffold ID.
  * Returns navigate details if found, including whether it's inside a disableAction.
  */
-function findNavigateAction(
+export function findNavigateAction(
   obj: unknown,
   targetScaffoldId: string,
   isDisabled: boolean,

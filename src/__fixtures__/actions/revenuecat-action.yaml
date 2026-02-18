@@ -1,0 +1,5 @@
+revenueCat:
+  paywall:
+    entitlementId:
+      inputValue:
+        serializedValue: premium_access

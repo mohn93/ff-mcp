@@ -1,0 +1,11 @@
+trigger:
+  triggerType: ON_TAP
+rootAction:
+  action:
+    key: action_tap1
+  followUpAction:
+    action:
+      key: action_tap2
+    followUpAction:
+      action:
+        key: action_tap3

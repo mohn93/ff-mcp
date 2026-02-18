@@ -1,0 +1,14 @@
+node:
+  key: Scaffold_abc123
+  body:
+    key: Column_body1
+    children:
+      - key: Text_title1
+      - key: Button_submit1
+      - key: Image_hero1
+  appBar:
+    key: AppBar_top1
+    title:
+      key: Text_appTitle1
+  floatingActionButton:
+    key: FloatingActionButton_fab1

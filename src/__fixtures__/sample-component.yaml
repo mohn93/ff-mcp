@@ -1,0 +1,12 @@
+name: PremiumCard
+description: A card displaying premium subscription info
+parameters:
+  - name: title
+    dataType:
+      stringType: true
+  - name: price
+    dataType:
+      doubleType: true
+    defaultValue:
+      inputValue: 9.99
+      mostRecentInputValue: 9.99

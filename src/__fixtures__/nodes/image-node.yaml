@@ -1,0 +1,14 @@
+type: Image
+name: HeroImage
+props:
+  image:
+    pathValue:
+      inputValue: https://example.com/images/hero.png
+      mostRecentInputValue: https://example.com/images/hero.png
+    dimensions:
+      width:
+        pixelsValue:
+          inputValue: 300
+      height:
+        pixelsValue:
+          inputValue: 200

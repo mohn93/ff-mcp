@@ -1,0 +1,7 @@
+type: Text
+name: WelcomeTitle
+props:
+  text:
+    textValue:
+      inputValue: Hello World
+      mostRecentInputValue: Hello World

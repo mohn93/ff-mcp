@@ -15,7 +15,7 @@ export interface NodeInfo {
  * Resolve the inputValue from a FF value object.
  * Returns the literal string, or "[dynamic]" for variable references.
  */
-function resolveValue(obj: unknown): string {
+export function resolveValue(obj: unknown): string {
   if (obj == null) return "";
   if (typeof obj === "string" || typeof obj === "number") return String(obj);
   if (typeof obj !== "object") return "";

@@ -1,0 +1,6 @@
+database:
+  postgresAction:
+    tableIdentifier:
+      name: users
+    insert:
+      rowData: {}

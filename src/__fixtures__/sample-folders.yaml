@@ -1,0 +1,12 @@
+rootFolders:
+  - key: folder1
+    name: Authentication
+    children:
+      - key: folder2
+        name: Login
+  - key: folder3
+    name: Dashboard
+widgetClassKeyToFolderKey:
+  Scaffold_abc123: folder1
+  Scaffold_def456: folder2
+  Scaffold_ghi789: folder3

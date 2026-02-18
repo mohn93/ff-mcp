@@ -1,0 +1,8 @@
+type: Button
+name: SubmitButton
+props:
+  button:
+    text:
+      textValue:
+        inputValue: Submit
+        mostRecentInputValue: Submit

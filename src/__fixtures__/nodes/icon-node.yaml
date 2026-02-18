@@ -1,0 +1,7 @@
+type: Icon
+name: MenuIcon
+props:
+  icon:
+    iconDataValue:
+      inputValue:
+        name: menu

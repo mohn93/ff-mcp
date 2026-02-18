@@ -12,7 +12,7 @@ import { ActionSummary, TriggerSummary } from "./types.js";
  * Collect all action keys referenced in a trigger chain.
  * Flattens followUpAction chains, conditionActions, and parallelActions.
  */
-function collectActionKeys(node: Record<string, unknown>): string[] {
+export function collectActionKeys(node: Record<string, unknown>): string[] {
   const keys: string[] = [];
 
   // Direct action reference
@@ -78,7 +78,7 @@ const ACTION_TYPE_KEYS = [
  * Used to unwrap disableAction nodes where the real action is buried
  * inside conditionalActions or other nesting.
  */
-function findDeepAction(obj: unknown, depth = 0): ActionSummary | null {
+export function findDeepAction(obj: unknown, depth = 0): ActionSummary | null {
   if (!obj || typeof obj !== "object" || depth > 8) return null;
   const o = obj as Record<string, unknown>;
 
@@ -101,7 +101,7 @@ function findDeepAction(obj: unknown, depth = 0): ActionSummary | null {
 /**
  * Classify an action YAML into a human-readable summary.
  */
-function classifyAction(doc: Record<string, unknown>): ActionSummary {
+export function classifyAction(doc: Record<string, unknown>): ActionSummary {
   // Disabled action — unwrap and recursively find the inner action
   if ("disableAction" in doc) {
     const da = doc.disableAction as Record<string, unknown>;

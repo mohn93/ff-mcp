@@ -1,0 +1,6 @@
+disableAction:
+  actionNode:
+    navigate:
+      pageNodeKeyRef:
+        key: Scaffold_disabled1
+      allowBack: false

@@ -1,0 +1,4 @@
+navigate:
+  pageNodeKeyRef:
+    key: Scaffold_target1
+  allowBack: true

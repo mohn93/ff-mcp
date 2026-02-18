@@ -1,0 +1,25 @@
+name: WelcomePage
+routeName: WelcomePage
+parameters:
+  - name: userId
+    dataType:
+      stringType: true
+    defaultValue:
+      inputValue: ""
+      mostRecentInputValue: ""
+  - name: showHeader
+    dataType:
+      boolType: true
+stateFields:
+  - name: isLoading
+    dataType:
+      boolType: true
+    defaultValue:
+      inputValue: false
+      mostRecentInputValue: false
+  - name: counter
+    dataType:
+      intType: true
+    defaultValue:
+      inputValue: 0
+      mostRecentInputValue: 0

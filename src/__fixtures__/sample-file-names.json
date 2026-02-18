@@ -1,0 +1,18 @@
+{
+  "value": {
+    "file_names": [
+      "app-details",
+      "folders",
+      "theme",
+      "page/id-Scaffold_abc123",
+      "page/id-Scaffold_abc123/page-widget-tree-outline",
+      "page/id-Scaffold_abc123/page-widget-tree-outline/node/id-Text_title1",
+      "page/id-Scaffold_abc123/page-widget-tree-outline/node/id-Button_submit1",
+      "page/id-Scaffold_def456",
+      "page/id-Scaffold_def456/page-widget-tree-outline",
+      "component/id-Container_comp1",
+      "component/id-Container_comp1/component-widget-tree-outline",
+      "component/id-Container_comp1/component-widget-tree-outline/node/id-Text_compText1"
+    ]
+  }
+}
