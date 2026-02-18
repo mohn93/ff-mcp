@@ -3,3 +3,4 @@ build/
 .env
 .ff-cache/
 .claude/
+.worktrees/
