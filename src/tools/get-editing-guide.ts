@@ -194,7 +194,7 @@ export function registerGetEditingGuideTool(server: McpServer) {
     },
     async ({ task, projectId }) => {
       // Tokenize into lowercase words
-      const words = task.toLowerCase().split(/\s+/);
+      const words = task.toLowerCase().split(/\W+/).filter(Boolean);
 
       // Detect edit type
       const editType = detectEditType(words);
