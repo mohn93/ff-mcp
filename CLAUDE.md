@@ -32,12 +32,12 @@ Requires `FLUTTERFLOW_API_TOKEN` env var (Bearer token from FlutterFlow > Accoun
 
 Every tool/resource/prompt follows the same pattern: a `register*` function that takes `(server, client?)` and calls `server.tool()`, `server.resource()`, or `server.prompt()`. New tools go in `src/tools/`, new prompts in `src/prompts/`, new resources in `src/resources/`. Register them in `src/index.ts`.
 
-### Tools (20)
+### Tools (21)
 
 | Tool | File | Purpose |
 |------|------|---------|
 | `list_projects` | `tools/list-projects.ts` | List all FF projects |
-| `list_project_files` | `tools/list-files.ts` | List all YAML file keys (large response) |
+| `list_project_files` | `tools/list-files.ts` | List YAML file keys (supports prefix filter) |
 | `get_project_yaml` | `tools/get-yaml.ts` | Fetch + decode YAML by file key |
 | `validate_yaml` | `tools/validate-yaml.ts` | Validate before pushing |
 | `update_project_yaml` | `tools/update-yaml.ts` | Push YAML changes |
@@ -52,10 +52,11 @@ Every tool/resource/prompt follows the same pattern: a `register*` function that
 | `get_app_state` | `tools/get-app-state.ts` | Cache-based app state, constants, and environment settings |
 | `get_api_endpoints` | `tools/get-api-endpoints.ts` | Cache-based API endpoint definitions (method, URL, variables, headers, response) |
 | `get_data_models` | `tools/get-data-models.ts` | Cache-based data structs, enums, Firestore collections, Supabase tables |
-| `get_custom_code` | `tools/get-custom-code.ts` | Cache-based custom actions, functions, widgets, AI agents (with optional Dart source) |
+| `get_custom_code` | `tools/get-custom-code.ts` | Custom actions, functions, widgets, agents, app-actions, custom-files |
 | `get_project_config` | `tools/get-project-config.ts` | Cache-based project config (app details, auth, nav bar, permissions, services, lifecycle actions, file map) |
 | `get_theme` | `tools/get-theme.ts` | Cache-based theme colors, typography, breakpoints, widget defaults |
 | `get_editing_guide` | `tools/get-editing-guide.ts` | Workflow + doc guide for editing tasks (call before modifying YAML) |
+| `search_project_files` | `tools/search-project-files.ts` | Search file keys by keyword/prefix/regex |
 
 ### Utilities
 
