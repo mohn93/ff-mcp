@@ -9,6 +9,7 @@ import YAML from "yaml";
 import {
   cacheRead,
   cacheMeta,
+  cacheAgeFooter,
   listCachedKeys,
 } from "../utils/cache.js";
 import { resolveComponent } from "./get-component-summary.js";
@@ -268,7 +269,7 @@ export function registerFindComponentUsagesTool(server: McpServer) {
       }
 
       return {
-        content: [{ type: "text" as const, text: lines.join("\n") }],
+        content: [{ type: "text" as const, text: lines.join("\n") + cacheAgeFooter(meta) }],
       };
     }
   );

@@ -8,6 +8,7 @@ import YAML from "yaml";
 import {
   cacheRead,
   cacheMeta,
+  cacheAgeFooter,
   listCachedKeys,
 } from "../utils/cache.js";
 import { parseTreeOutline } from "../utils/page-summary/tree-walker.js";
@@ -268,7 +269,7 @@ export function registerGetComponentSummaryTool(server: McpServer) {
       const summary = formatComponentSummary(componentMeta, enrichedTree);
 
       return {
-        content: [{ type: "text" as const, text: summary }],
+        content: [{ type: "text" as const, text: summary + cacheAgeFooter(meta) }],
       };
     }
   );

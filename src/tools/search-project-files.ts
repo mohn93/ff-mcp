@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { cacheMeta, listCachedKeys } from "../utils/cache.js";
+import { cacheMeta, listCachedKeys, cacheAgeFooter } from "../utils/cache.js";
 
 const MAX_RESULTS = 100;
 
@@ -77,7 +77,7 @@ export function registerSearchProjectFilesTool(server: McpServer) {
       }
 
       return {
-        content: [{ type: "text" as const, text: lines.join("\n") }],
+        content: [{ type: "text" as const, text: lines.join("\n") + cacheAgeFooter(meta) }],
       };
     }
   );

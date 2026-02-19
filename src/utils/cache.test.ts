@@ -9,6 +9,7 @@ import {
   cacheInvalidate,
   listCachedKeys,
   cacheDir,
+  cacheAgeFooter,
 } from "./cache.js";
 import type { CacheMeta } from "./cache.js";
 
@@ -174,5 +175,42 @@ describe("listCachedKeys", () => {
   it("returns empty array when prefix matches nothing", async () => {
     const keys = await listCachedKeys(TEST_PROJECT_ID, "no-match/");
     expect(keys).toEqual([]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// cacheAgeFooter
+// ---------------------------------------------------------------------------
+describe("cacheAgeFooter", () => {
+  function makeMeta(minutesAgo: number): CacheMeta {
+    const ts = new Date(Date.now() - minutesAgo * 60_000).toISOString();
+    return { lastSyncedAt: ts, fileCount: 10, syncMethod: "bulk" };
+  }
+
+  it('returns "just now" for < 1 min', () => {
+    const footer = cacheAgeFooter(makeMeta(0));
+    expect(footer).toContain("just now");
+    expect(footer).toContain("sync_project");
+  });
+
+  it('returns "5 min ago" for 5 min', () => {
+    const footer = cacheAgeFooter(makeMeta(5));
+    expect(footer).toContain("5 min ago");
+  });
+
+  it('returns "2h 30m ago" for 150 min', () => {
+    const footer = cacheAgeFooter(makeMeta(150));
+    expect(footer).toContain("2h 30m ago");
+  });
+
+  it('returns "1d ago" for 1440+ min', () => {
+    const footer = cacheAgeFooter(makeMeta(1440));
+    expect(footer).toContain("1d ago");
+  });
+
+  it("includes the ISO timestamp in output", () => {
+    const meta = makeMeta(10);
+    const footer = cacheAgeFooter(meta);
+    expect(footer).toContain(meta.lastSyncedAt);
   });
 });

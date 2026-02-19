@@ -6,6 +6,7 @@ vi.mock("../cache.js", () => ({
   cacheWrite: vi.fn(),
   cacheWriteBulk: vi.fn(),
   cacheMeta: vi.fn(),
+  cacheAgeFooter: vi.fn(() => ""),
   cacheWriteMeta: vi.fn(),
   cacheInvalidate: vi.fn(),
   listCachedKeys: vi.fn(),

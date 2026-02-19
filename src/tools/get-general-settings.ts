@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import YAML from "yaml";
-import { cacheRead, cacheMeta } from "../utils/cache.js";
+import { cacheRead, cacheMeta, cacheAgeFooter } from "../utils/cache.js";
 
 async function resolvePageName(
   projectId: string,
@@ -143,7 +143,7 @@ export function registerGetGeneralSettingsTool(server: McpServer) {
       }
 
       return {
-        content: [{ type: "text" as const, text: sections.join("\n") }],
+        content: [{ type: "text" as const, text: sections.join("\n") + cacheAgeFooter(meta) }],
       };
     }
   );

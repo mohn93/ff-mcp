@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import YAML from "yaml";
-import { cacheRead, cacheMeta, listCachedKeys } from "../utils/cache.js";
+import { cacheRead, cacheMeta, cacheAgeFooter, listCachedKeys } from "../utils/cache.js";
 import { batchProcess } from "../utils/batch-process.js";
 import { resolveDataType } from "../utils/resolve-data-type.js";
 
@@ -492,7 +492,7 @@ export function registerGetCustomCodeTool(server: McpServer) {
       const output = `# Custom Code\n\n${sections.join("\n\n")}`;
 
       return {
-        content: [{ type: "text" as const, text: output }],
+        content: [{ type: "text" as const, text: output + cacheAgeFooter(meta) }],
       };
     }
   );

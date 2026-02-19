@@ -8,6 +8,7 @@ import YAML from "yaml";
 import {
   cacheRead,
   cacheMeta,
+  cacheAgeFooter,
   listCachedKeys,
 } from "../utils/cache.js";
 import { parseFolderMapping } from "../utils/parse-folders.js";
@@ -280,7 +281,7 @@ export function registerGetPageSummaryTool(server: McpServer) {
       const summary = formatPageSummary(pageMeta, enrichedTree);
 
       return {
-        content: [{ type: "text" as const, text: summary }],
+        content: [{ type: "text" as const, text: summary + cacheAgeFooter(meta) }],
       };
     }
   );

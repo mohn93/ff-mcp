@@ -9,6 +9,7 @@ import YAML from "yaml";
 import {
   cacheRead,
   cacheMeta,
+  cacheAgeFooter,
   listCachedKeys,
 } from "../utils/cache.js";
 import { resolvePage } from "./get-page-summary.js";
@@ -285,7 +286,7 @@ export function registerFindPageNavigationsTool(server: McpServer) {
       }
 
       return {
-        content: [{ type: "text" as const, text: lines.join("\n") }],
+        content: [{ type: "text" as const, text: lines.join("\n") + cacheAgeFooter(meta) }],
       };
     }
   );

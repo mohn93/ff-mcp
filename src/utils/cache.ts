@@ -196,6 +196,28 @@ export async function listCachedKeys(
 }
 
 // ---------------------------------------------------------------------------
+// Cache age footer
+// ---------------------------------------------------------------------------
+
+/**
+ * Format a human-readable footer indicating cache age.
+ * Appended to cache-based tool responses so the AI can judge staleness.
+ */
+export function cacheAgeFooter(meta: CacheMeta): string {
+  const syncedAt = new Date(meta.lastSyncedAt);
+  const diffMs = Date.now() - syncedAt.getTime();
+  const diffMin = Math.floor(diffMs / 60_000);
+
+  let ago: string;
+  if (diffMin < 1) ago = "just now";
+  else if (diffMin < 60) ago = `${diffMin} min ago`;
+  else if (diffMin < 1440) ago = `${Math.floor(diffMin / 60)}h ${diffMin % 60}m ago`;
+  else ago = `${Math.floor(diffMin / 1440)}d ago`;
+
+  return `\n\n---\n_Synced: ${meta.lastSyncedAt} (${ago}). Call sync_project to refresh._`;
+}
+
+// ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
 

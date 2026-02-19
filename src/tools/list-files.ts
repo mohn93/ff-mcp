@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { FlutterFlowClient } from "../api/flutterflow.js";
-import { listCachedKeys, cacheMeta } from "../utils/cache.js";
+import { listCachedKeys, cacheMeta, cacheAgeFooter } from "../utils/cache.js";
 
 export function registerListFilesTool(
   server: McpServer,
@@ -29,7 +29,7 @@ export function registerListFilesTool(
                 { value: { file_names: keys }, source: "cache", syncedAt: meta.lastSyncedAt },
                 null,
                 2
-              ),
+              ) + cacheAgeFooter(meta),
             },
           ],
         };

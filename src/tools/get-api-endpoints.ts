@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import YAML from "yaml";
-import { cacheRead, cacheMeta, listCachedKeys } from "../utils/cache.js";
+import { cacheRead, cacheMeta, cacheAgeFooter, listCachedKeys } from "../utils/cache.js";
 import { batchProcess } from "../utils/batch-process.js";
 
 interface ApiEndpoint {
@@ -154,7 +154,7 @@ export function registerGetApiEndpointsTool(server: McpServer) {
       }
 
       return {
-        content: [{ type: "text" as const, text: formatEndpoints(endpoints) }],
+        content: [{ type: "text" as const, text: formatEndpoints(endpoints) + cacheAgeFooter(meta) }],
       };
     }
   );
