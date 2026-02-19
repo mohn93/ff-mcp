@@ -32,7 +32,7 @@ Requires `FLUTTERFLOW_API_TOKEN` env var (Bearer token from FlutterFlow > Accoun
 
 Every tool/resource/prompt follows the same pattern: a `register*` function that takes `(server, client?)` and calls `server.tool()`, `server.resource()`, or `server.prompt()`. New tools go in `src/tools/`, new prompts in `src/prompts/`, new resources in `src/resources/`. Register them in `src/index.ts`.
 
-### Tools (21)
+### Tools (25)
 
 | Tool | File | Purpose |
 |------|------|---------|
@@ -53,7 +53,11 @@ Every tool/resource/prompt follows the same pattern: a `register*` function that
 | `get_api_endpoints` | `tools/get-api-endpoints.ts` | Cache-based API endpoint definitions (method, URL, variables, headers, response) |
 | `get_data_models` | `tools/get-data-models.ts` | Cache-based data structs, enums, Firestore collections, Supabase tables |
 | `get_custom_code` | `tools/get-custom-code.ts` | Custom actions, functions, widgets, agents, app-actions, custom-files |
-| `get_project_config` | `tools/get-project-config.ts` | Cache-based project config (app details, auth, nav bar, permissions, services, lifecycle actions, file map) |
+| `get_general_settings` | `tools/get-general-settings.ts` | General: App Details, App Assets, Nav Bar & App Bar |
+| `get_project_setup` | `tools/get-project-setup.ts` | Project Setup: Firebase, Languages, Platforms, Permissions, Dependencies, Dev Environments |
+| `get_app_settings` | `tools/get-app-settings.ts` | App Settings: Authentication, Push Notifications, Mobile/Web Deployment |
+| `get_in_app_purchases` | `tools/get-in-app-purchases.ts` | In-App Purchases: Stripe, Braintree, RevenueCat, Razorpay |
+| `get_integrations` | `tools/get-integrations.ts` | Integrations: Supabase, SQLite, GitHub, Algolia, Google Maps, AdMob, etc. |
 | `get_theme` | `tools/get-theme.ts` | Cache-based theme colors, typography, breakpoints, widget defaults |
 | `get_editing_guide` | `tools/get-editing-guide.ts` | Workflow + doc guide for editing tasks (call before modifying YAML) |
 | `search_project_files` | `tools/search-project-files.ts` | Search file keys by keyword/prefix/regex |
