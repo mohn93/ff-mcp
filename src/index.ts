@@ -26,10 +26,13 @@ import { registerGetAppStateTool } from "./tools/get-app-state.js";
 import { registerGetApiEndpointsTool } from "./tools/get-api-endpoints.js";
 import { registerGetDataModelsTool } from "./tools/get-data-models.js";
 import { registerGetCustomCodeTool } from "./tools/get-custom-code.js";
-import { registerGetProjectConfigTool } from "./tools/get-project-config.js";
 import { registerGetThemeTool } from "./tools/get-theme.js";
 import { registerGetEditingGuideTool } from "./tools/get-editing-guide.js";
 import { registerSearchProjectFilesTool } from "./tools/search-project-files.js";
+import { registerGetGeneralSettingsTool } from "./tools/get-general-settings.js";
+import { registerGetProjectSetupTool } from "./tools/get-project-setup.js";
+import { registerGetAppSettingsTool } from "./tools/get-app-settings.js";
+import { registerGetInAppPurchasesTool } from "./tools/get-in-app-purchases.js";
 import { registerGetIntegrationsTool } from "./tools/get-integrations.js";
 
 const server = new McpServer({
@@ -57,10 +60,13 @@ registerGetAppStateTool(server);
 registerGetApiEndpointsTool(server);
 registerGetDataModelsTool(server);
 registerGetCustomCodeTool(server);
-registerGetProjectConfigTool(server);
 registerGetThemeTool(server);
 registerGetEditingGuideTool(server);
 registerSearchProjectFilesTool(server);
+registerGetGeneralSettingsTool(server);
+registerGetProjectSetupTool(server);
+registerGetAppSettingsTool(server);
+registerGetInAppPurchasesTool(server);
 registerGetIntegrationsTool(server);
 
 // Register resources
