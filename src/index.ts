@@ -30,6 +30,7 @@ import { registerGetProjectConfigTool } from "./tools/get-project-config.js";
 import { registerGetThemeTool } from "./tools/get-theme.js";
 import { registerGetEditingGuideTool } from "./tools/get-editing-guide.js";
 import { registerSearchProjectFilesTool } from "./tools/search-project-files.js";
+import { registerGetIntegrationsTool } from "./tools/get-integrations.js";
 
 const server = new McpServer({
   name: "ff-mcp",
@@ -60,6 +61,7 @@ registerGetProjectConfigTool(server);
 registerGetThemeTool(server);
 registerGetEditingGuideTool(server);
 registerSearchProjectFilesTool(server);
+registerGetIntegrationsTool(server);
 
 // Register resources
 registerResources(server, client);
