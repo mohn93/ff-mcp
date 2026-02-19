@@ -22,14 +22,15 @@ export function registerGeneratePagePrompt(server: McpServer) {
 ## Instructions
 
 1. First, use the list_project_files tool with projectId "${projectId}" to understand the existing project structure.
-2. Then, use get_project_yaml to read a few existing pages to understand the YAML schema and conventions used in this project.
-3. Based on the following description, generate valid FlutterFlow YAML for a new page:
+2. Use \`get_editing_guide\` with a description of the page you want to create to get the correct YAML schemas, workflow steps, and critical rules.
+3. Then, use get_project_yaml to read a few existing pages to understand the YAML schema and conventions used in this project.
+4. Based on the following description, generate valid FlutterFlow YAML for a new page:
 
 **Page Description:** ${description}
 
-4. Use validate_yaml to check your generated YAML is valid.
-5. If validation passes, use update_project_yaml to push the new page to the project.
-6. If validation fails, fix the errors and try again.
+5. Use validate_yaml to check your generated YAML is valid.
+6. If validation passes, use update_project_yaml to push the new page to the project.
+7. If validation fails, fix the errors and try again.
 
 ## Important
 - Follow the exact YAML structure you observed in existing pages.

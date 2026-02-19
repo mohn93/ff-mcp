@@ -25,14 +25,15 @@ export function registerModifyComponentPrompt(server: McpServer) {
 ## Instructions
 
 1. Use get_project_yaml with projectId "${projectId}" and fileName "${fileName}" to read the current component YAML.
-2. Understand the current structure and widget tree.
-3. Apply the following changes:
+2. Use \`get_editing_guide\` with a description of the changes you want to make to get the correct YAML schemas and critical rules.
+3. Understand the current structure and widget tree.
+4. Apply the following changes:
 
 **Requested Changes:** ${changes}
 
-4. Use validate_yaml to verify your modified YAML is valid.
-5. If validation passes, use update_project_yaml to push the changes.
-6. If validation fails, fix the errors and try again.
+5. Use validate_yaml to verify your modified YAML is valid.
+6. If validation passes, use update_project_yaml to push the changes.
+7. If validation fails, fix the errors and try again.
 
 ## Important
 - Preserve all existing structure you are not modifying.
