@@ -53,7 +53,7 @@ Every tool/resource/prompt follows the same pattern: a `register*` function that
 | `get_api_endpoints` | `tools/get-api-endpoints.ts` | Cache-based API endpoint definitions (method, URL, variables, headers, response) |
 | `get_data_models` | `tools/get-data-models.ts` | Cache-based data structs, enums, Firestore collections, Supabase tables |
 | `get_custom_code` | `tools/get-custom-code.ts` | Cache-based custom actions, functions, widgets, AI agents (with optional Dart source) |
-| `get_project_config` | `tools/get-project-config.ts` | Cache-based project config (app details, auth, nav bar, permissions, services) |
+| `get_project_config` | `tools/get-project-config.ts` | Cache-based project config (app details, auth, nav bar, permissions, services, lifecycle actions, file map) |
 | `get_theme` | `tools/get-theme.ts` | Cache-based theme colors, typography, breakpoints, widget defaults |
 | `get_editing_guide` | `tools/get-editing-guide.ts` | Workflow + doc guide for editing tasks (call before modifying YAML) |
 

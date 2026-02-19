@@ -25,6 +25,7 @@ describe("get_project_config handler", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockedListCachedKeys.mockResolvedValue([]);
     const mock = createMockServer();
     registerGetProjectConfigTool(mock.server as any);
     getHandler = mock.getHandler;
@@ -334,5 +335,128 @@ describe("get_project_config handler", () => {
 
     expect(text).toContain("## App Details");
     expect(text).toContain("(not cached)");
+  });
+
+  it("shows lifecycle actions from custom-file/id-MAIN", async () => {
+    mockedCacheMeta.mockResolvedValue({
+      lastSyncedAt: "2025-01-01",
+      fileCount: 10,
+      syncMethod: "bulk",
+    });
+
+    mockedCacheRead.mockImplementation(async (_pid, key) => {
+      if (key === "custom-file/id-MAIN") {
+        return [
+          "type: MAIN",
+          "isUnlocked: false",
+          "actions:",
+          "  - type: INITIAL_ACTION",
+          "    identifier:",
+          "      name: changeStatusBarColor",
+          "      key: d8rqwp",
+          "  - type: INITIAL_ACTION",
+          "    identifier:",
+          "      name: refreshConfig",
+          "      key: hfpkf",
+          "  - type: FINAL_ACTION",
+          "    identifier:",
+          "      key: 4lla8",
+          "  - type: FINAL_ACTION",
+          "    identifier:",
+          "      name: initPushNotifications",
+          "      key: mtd59",
+          "      projectId: push-fire-lib",
+        ].join("\n");
+      }
+      return null;
+    });
+
+    mockedListCachedKeys.mockResolvedValue([]);
+
+    const handler = getHandler("get_project_config");
+    const result = await handler({ projectId: "proj-1" });
+    const text = result.content[0].text;
+
+    expect(text).toContain("## Lifecycle Actions (main.dart)");
+    expect(text).toContain("Initial Actions:");
+    expect(text).toContain("changeStatusBarColor (key: d8rqwp)");
+    expect(text).toContain("refreshConfig (key: hfpkf)");
+    expect(text).toContain("Final Actions:");
+    expect(text).toContain("(unnamed) (key: 4lla8)");
+    expect(text).toContain("initPushNotifications (key: mtd59, from: push-fire-lib)");
+  });
+
+  it("shows lifecycle actions section as '(none)' when custom-file/id-MAIN has no actions", async () => {
+    mockedCacheMeta.mockResolvedValue({
+      lastSyncedAt: "2025-01-01",
+      fileCount: 10,
+      syncMethod: "bulk",
+    });
+
+    mockedCacheRead.mockImplementation(async (_pid, key) => {
+      if (key === "custom-file/id-MAIN") {
+        return "type: MAIN\nisUnlocked: false";
+      }
+      return null;
+    });
+
+    mockedListCachedKeys.mockResolvedValue([]);
+
+    const handler = getHandler("get_project_config");
+    const result = await handler({ projectId: "proj-1" });
+    const text = result.content[0].text;
+
+    expect(text).toContain("## Lifecycle Actions (main.dart)");
+    expect(text).toContain("(none)");
+  });
+
+  it("shows project file map with category counts", async () => {
+    mockedCacheMeta.mockResolvedValue({
+      lastSyncedAt: "2025-01-01",
+      fileCount: 10,
+      syncMethod: "bulk",
+    });
+
+    mockedCacheRead.mockResolvedValue(null);
+
+    mockedListCachedKeys.mockResolvedValue([
+      "page/id-Scaffold_abc",
+      "page/id-Scaffold_abc/page-widget-tree-outline",
+      "page/id-Scaffold_abc/page-widget-tree-outline/node/id-Widget_1",
+      "page/id-Scaffold_def",
+      "component/id-Container_xyz",
+      "component/id-Container_xyz/component-widget-tree-outline",
+      "custom-actions/id-abc",
+      "custom-actions/id-abc/action-code.dart",
+      "custom-actions/id-def",
+      "custom-functions/id-fn1",
+      "custom-widgets/id-wdg1",
+      "custom-file/id-MAIN",
+      "custom-file/id-MAIN/custom-file-code.dart",
+      "custom-file/id-OTHER",
+      "app-action-components/id-ld3jo3",
+      "api-endpoint/id-ep1",
+      "api-endpoint/id-ep2",
+      "collections/id-col1",
+      "agent/id-ag1",
+      "app-details",
+      "app-state",
+    ]);
+
+    const handler = getHandler("get_project_config");
+    const result = await handler({ projectId: "proj-1" });
+    const text = result.content[0].text;
+
+    expect(text).toContain("## Project File Map");
+    expect(text).toContain("Pages: 2");
+    expect(text).toContain("Components: 1");
+    expect(text).toContain("Custom Actions: 2");
+    expect(text).toContain("Custom Functions: 1");
+    expect(text).toContain("Custom Widgets: 1");
+    expect(text).toContain("Custom Files: 2");
+    expect(text).toContain("App Action Components: 1");
+    expect(text).toContain("API Endpoints: 2");
+    expect(text).toContain("Collections: 1");
+    expect(text).toContain("AI Agents: 1");
   });
 });

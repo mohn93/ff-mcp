@@ -16,7 +16,7 @@ async function resolvePageName(
 export function registerGetProjectConfigTool(server: McpServer) {
   server.tool(
     "get_project_config",
-    "Get core project configuration — app name, entry pages, routing, nav bar, auth, permissions, and services. No API calls. Run sync_project first if not cached.",
+    "Get core project configuration — app name, entry pages, routing, nav bar, auth, permissions, services, main.dart lifecycle actions, and a project file map. No API calls. Run sync_project first if not cached.",
     {
       projectId: z.string().describe("The FlutterFlow project ID"),
     },
@@ -199,6 +199,68 @@ export function registerGetProjectConfigTool(server: McpServer) {
         sections.push(`RevenueCat: ${revenueCat.enabled === true ? "enabled" : "disabled"}`);
       } else {
         sections.push(`RevenueCat: disabled`);
+      }
+
+      // --- Lifecycle Actions (main.dart) ---
+      sections.push(`\n## Lifecycle Actions (main.dart)`);
+      const mainFileRaw = await cacheRead(projectId, "custom-file/id-MAIN");
+      if (mainFileRaw) {
+        const mainFile = YAML.parse(mainFileRaw) as Record<string, unknown>;
+        const actions = mainFile.actions as Array<Record<string, unknown>> | undefined;
+
+        if (actions && actions.length > 0) {
+          const initialActions = actions.filter((a) => a.type === "INITIAL_ACTION");
+          const finalActions = actions.filter((a) => a.type === "FINAL_ACTION");
+
+          const formatAction = (action: Record<string, unknown>, index: number): string => {
+            const identifier = action.identifier as Record<string, unknown> | undefined;
+            const name = (identifier?.name as string) || "(unnamed)";
+            const key = identifier?.key as string;
+            const fromProject = identifier?.projectId as string | undefined;
+            const fromSuffix = fromProject ? `, from: ${fromProject}` : "";
+            return `  ${index + 1}. ${name} (key: ${key}${fromSuffix})`;
+          };
+
+          if (initialActions.length > 0) {
+            sections.push(`Initial Actions:`);
+            initialActions.forEach((a, i) => sections.push(formatAction(a, i)));
+          }
+
+          if (finalActions.length > 0) {
+            sections.push(`Final Actions:`);
+            finalActions.forEach((a, i) => sections.push(formatAction(a, i)));
+          }
+        } else {
+          sections.push(`(none)`);
+        }
+      } else {
+        sections.push(`(none)`);
+      }
+
+      // --- Project File Map ---
+      const allKeys = await listCachedKeys(projectId);
+      sections.push(`\n## Project File Map`);
+
+      const categoryPatterns: Array<{ label: string; pattern?: RegExp; prefix?: string }> = [
+        { label: "Pages", pattern: /^page\/id-[^/]+$/ },
+        { label: "Components", pattern: /^component\/id-[^/]+$/ },
+        { label: "Custom Actions", pattern: /^custom-actions\/id-[^/]+$/ },
+        { label: "Custom Functions", pattern: /^custom-functions\/id-[^/]+$/ },
+        { label: "Custom Widgets", pattern: /^custom-widgets\/id-[^/]+$/ },
+        { label: "Custom Files", pattern: /^custom-file\/id-[^/]+$/ },
+        { label: "App Action Components", pattern: /^app-action-components\/id-[^/]+$/ },
+        { label: "API Endpoints", prefix: "api-endpoint/" },
+        { label: "Collections", prefix: "collections/" },
+        { label: "AI Agents", pattern: /^agent\/id-[^/]+$/ },
+      ];
+
+      for (const cat of categoryPatterns) {
+        const count = cat.pattern
+          ? allKeys.filter((k) => cat.pattern!.test(k)).length
+          : allKeys.filter((k) => k.startsWith(cat.prefix!)).length;
+        if (count > 0) {
+          sections.push(`${cat.label}: ${count}`);
+        }
       }
 
       return {
