@@ -89,4 +89,80 @@ describe("list_project_files tool", () => {
 
     expect(mockedListCachedKeys).not.toHaveBeenCalled();
   });
+
+  it("filters by prefix when cache exists and prefix is provided", async () => {
+    mockedCacheMeta.mockResolvedValue({
+      lastSyncedAt: "2025-01-01T00:00:00Z",
+      fileCount: 5,
+      syncMethod: "bulk",
+    });
+    mockedListCachedKeys.mockResolvedValue([
+      "page/id-Scaffold_abc",
+      "page/id-Scaffold_def",
+    ]);
+
+    const handler = getHandler("list_project_files");
+    const result = await handler({ projectId: "proj-cached", prefix: "page/" });
+
+    expect(mockedListCachedKeys).toHaveBeenCalledWith("proj-cached", "page/");
+
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.source).toBe("cache");
+    expect(parsed.value.file_names).toEqual([
+      "page/id-Scaffold_abc",
+      "page/id-Scaffold_def",
+    ]);
+  });
+
+  it("filters by prefix client-side when falling back to API", async () => {
+    mockedCacheMeta.mockResolvedValue(null);
+    const apiResult = {
+      value: {
+        file_names: [
+          "app-details",
+          "page/id-Scaffold_abc",
+          "page/id-Scaffold_def",
+          "custom-file/my-action",
+          "folders",
+        ],
+      },
+    };
+    mockClient.listPartitionedFileNames.mockResolvedValue(apiResult);
+
+    const handler = getHandler("list_project_files");
+    const result = await handler({ projectId: "proj-no-cache", prefix: "page/" });
+
+    expect(mockClient.listPartitionedFileNames).toHaveBeenCalledWith("proj-no-cache");
+
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.value.file_names).toEqual([
+      "page/id-Scaffold_abc",
+      "page/id-Scaffold_def",
+    ]);
+  });
+
+  it("returns all keys when prefix is not provided (existing behavior)", async () => {
+    mockedCacheMeta.mockResolvedValue({
+      lastSyncedAt: "2025-06-01T00:00:00Z",
+      fileCount: 3,
+      syncMethod: "bulk",
+    });
+    mockedListCachedKeys.mockResolvedValue([
+      "app-details",
+      "page/id-Scaffold_abc",
+      "folders",
+    ]);
+
+    const handler = getHandler("list_project_files");
+    const result = await handler({ projectId: "proj-cached" });
+
+    expect(mockedListCachedKeys).toHaveBeenCalledWith("proj-cached");
+
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.value.file_names).toEqual([
+      "app-details",
+      "page/id-Scaffold_abc",
+      "folders",
+    ]);
+  });
 });

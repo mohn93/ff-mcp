@@ -9,15 +9,18 @@ export function registerListFilesTool(
 ) {
   server.tool(
     "list_project_files",
-    "List all YAML file names in a FlutterFlow project",
+    "List all YAML file names in a FlutterFlow project. Supports optional prefix filter (e.g. 'page/', 'component/') to narrow results.",
     {
       projectId: z.string().describe("The FlutterFlow project ID"),
+      prefix: z.string().optional().describe("Optional prefix to filter file keys (e.g. 'page/', 'custom-file/')"),
     },
-    async ({ projectId }) => {
+    async ({ projectId, prefix }) => {
       // If cache exists, return file keys from cache
       const meta = await cacheMeta(projectId);
       if (meta) {
-        const keys = await listCachedKeys(projectId);
+        const keys = prefix
+          ? await listCachedKeys(projectId, prefix)
+          : await listCachedKeys(projectId);
         return {
           content: [
             {
@@ -33,6 +36,28 @@ export function registerListFilesTool(
       }
 
       const result = await client.listPartitionedFileNames(projectId);
+
+      // Apply client-side prefix filter when falling back to API
+      if (prefix) {
+        const apiResult = result as { value?: { file_names?: string[] } };
+        const allKeys = apiResult?.value?.file_names;
+        if (Array.isArray(allKeys)) {
+          const filtered = allKeys.filter((k) => k.startsWith(prefix));
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify(
+                  { value: { file_names: filtered } },
+                  null,
+                  2
+                ),
+              },
+            ],
+          };
+        }
+      }
+
       return {
         content: [
           {
