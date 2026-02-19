@@ -28,6 +28,7 @@ export function registerGetYamlTool(server: McpServer) {
             ],
           };
         }
+
         return {
           content: [
             {

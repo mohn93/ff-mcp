@@ -139,3 +139,93 @@ Custom code files should be treated as **read-only** through the API. The MCP ca
 
 Provide a dedicated endpoint for updating custom code (e.g., `updateCustomActionCode`) that accepts the project ID, action/function/widget key, and the raw Dart code string — separate from the metadata YAML update flow. Alternatively, fix `updateProjectByYaml` to correctly handle the `code` field in custom code metadata files without corrupting the UI rendering.
 
+---
+
+## 8. `custom-file/id-MAIN` Dart Code Cannot Be Pushed When Unlocked
+
+**Problem:** When `isUnlocked: true` on `custom-file/id-MAIN` (i.e., the user has enabled raw Dart editing for `main.dart` in the FF editor), pushing code to the Dart sub-file (`custom-file/id-MAIN/custom-file-code.dart`) does not update the code in the editor correctly.
+
+### What happens when you push
+
+Instead of updating the Dart source in the editor, the pushed content gets collapsed into a `fullContent` field on the config file (`custom-file/id-MAIN`). The result looks like:
+
+```yaml
+type: MAIN
+isUnlocked: true
+fullContent: "import '\/custom_code\/actions\/index.dart' as actions;\n..."
+actions:
+  - type: INITIAL_ACTION
+    ...
+```
+
+The `fullContent` field contains the entire Dart source as a single escaped string. The actual editor content is not updated — it reverts to the previous state or shows the original generated code.
+
+### What works
+
+- **Reading** the Dart code via `custom-file/id-MAIN/custom-file-code.dart` — works correctly
+- **Editing the `actions` list** in `custom-file/id-MAIN` — works correctly (add/remove/reorder INITIAL_ACTION and FINAL_ACTION entries)
+- **Setting `isUnlocked`** — reflects in the config but does not affect editor behavior via API
+
+### Impact
+
+When `main.dart` is unlocked, AI agents should **read the current code and instruct the user what to edit** in the FlutterFlow editor, rather than attempting to push code changes via the API.
+
+### Suggestion
+
+Support pushing raw Dart content to `custom-file/id-MAIN/custom-file-code.dart` when `isUnlocked: true`, applying it as the editor content — similar to how custom actions/functions/widgets are intended to work.
+
+---
+
+## 9. Hook Name Validation Gap in `custom-file/id-ANDROID_MANIFEST`
+
+**Problem:** When pushing hooks to `custom-file/id-ANDROID_MANIFEST` via the API, the `validate_yaml` endpoint accepts hook names containing hyphens (e.g., `mcp-test-hook`). The push succeeds and the hook appears in the FF editor. However, the FF editor then shows a validation error: "Name contains invalid character."
+
+This means the API allows creating hooks with names that are invalid according to the FF editor's own validation rules.
+
+**Impact:** Hooks pushed with invalid names work at build time but cannot be edited in the FF editor without first fixing the name.
+
+**Workaround:** Use camelCase or spaces for hook names (e.g., `mcpTestHook` or `mcp test hook`). Avoid hyphens, underscores, and special characters.
+
+**Suggestion:** The `validate_yaml` endpoint should enforce the same name validation rules as the FF editor, rejecting names with invalid characters before the push.
+
+---
+
+## 10. Pushing One `custom-file` Deletes All Other `custom-file` Entries
+
+**Problem:** The `updateProjectByYaml` endpoint treats all `custom-file/id-*` keys as a single collection. When you push a single custom file (e.g., `custom-file/id-ANDROID_MANIFEST`), the server replaces the **entire** `custom-file` collection — any `custom-file` entries not included in the push payload are deleted.
+
+### Reproduction
+
+1. Project has `custom-file/id-MAIN` with 4 startup actions and `custom-file/id-ANDROID_MANIFEST` with 1 hook.
+2. Push only `custom-file/id-ANDROID_MANIFEST` (with hooks removed):
+   ```json
+   { "custom-file/id-ANDROID_MANIFEST": "type: ANDROID_MANIFEST\nidentifier:\n  name: AndroidManifest.xml" }
+   ```
+3. Push succeeds (200).
+4. `custom-file/id-MAIN` is now gone (API returns 404). All startup actions are deleted.
+
+### Impact
+
+**Destructive data loss.** Any MCP tool or automation that pushes a single custom file will silently delete all other custom files in the project. This affects:
+- `custom-file/id-MAIN` (startup actions)
+- `custom-file/id-ANDROID_MANIFEST` (manifest hooks)
+- `custom-file/id-PROGUARD` (ProGuard rules)
+- `custom-file/id-BUILD_GRADLE` (Gradle config)
+- Any future custom file types
+
+### Workaround
+
+Before pushing any `custom-file/id-*` key, read **all** existing custom-file entries and include them in the same push payload. This preserves the entries not being modified.
+
+```
+1. List/read all custom-file/id-* keys from cache or API
+2. Build push payload with ALL custom-file entries (modified + unmodified)
+3. Push the combined payload in a single update_project_yaml call
+```
+
+### Expected Behavior
+
+Pushing a single `custom-file/id-ANDROID_MANIFEST` should only affect that file, leaving `custom-file/id-MAIN` and other custom files untouched — the same way pushing `app-details` doesn't delete `authentication`.
+
+**Suggestion:** Either scope the update to only the file keys included in the push (like other top-level keys), or return an error/warning when a push would implicitly delete sibling `custom-file` entries.
+

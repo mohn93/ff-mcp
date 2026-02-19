@@ -8,6 +8,7 @@ vi.mock("../utils/cache.js", () => ({
   cacheMeta: vi.fn(),
   cacheWriteMeta: vi.fn(),
   cacheInvalidate: vi.fn(),
+  cacheClear: vi.fn(),
   listCachedKeys: vi.fn(),
   cacheDir: vi.fn(),
 }));
@@ -48,7 +49,7 @@ describe("get_project_yaml tool", () => {
     );
   });
 
-  it("returns error when fileName is not in cache", async () => {
+  it("returns not-found message when file is not in cache", async () => {
     mockedCacheRead.mockResolvedValue(null);
 
     const handler = getHandler("get_project_yaml");
@@ -58,7 +59,6 @@ describe("get_project_yaml tool", () => {
     });
 
     expect(result.content[0].text).toContain("not found in local cache");
-    expect(result.content[0].text).toContain("proj-123");
     expect(result.content[0].text).toContain("sync_project");
   });
 

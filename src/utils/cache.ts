@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile, unlink, readdir } from "node:fs/promises";
+import { mkdir, readFile, writeFile, unlink, readdir, rm } from "node:fs/promises";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -95,6 +95,21 @@ export async function cacheInvalidate(
 ): Promise<void> {
   try {
     await unlink(keyToPath(projectId, fileKey));
+  } catch (err: unknown) {
+    if (isNodeError(err) && err.code === "ENOENT") {
+      return; // already gone — no-op
+    }
+    throw err;
+  }
+}
+
+/**
+ * Delete the entire cache directory for a project, removing all cached files
+ * and metadata. No-op if the directory does not exist.
+ */
+export async function cacheClear(projectId: string): Promise<void> {
+  try {
+    await rm(cacheDir(projectId), { recursive: true, force: true });
   } catch (err: unknown) {
     if (isNodeError(err) && err.code === "ENOENT") {
       return; // already gone — no-op

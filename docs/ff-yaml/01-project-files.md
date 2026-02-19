@@ -132,6 +132,14 @@ widgetClassKeyToFolderKey:
 
 **Purpose:** Platform permission declarations with user-facing explanation messages.
 
+> **Important — this is an abstraction layer, not a native file.**
+> This file is NOT the `AndroidManifest.xml` or `Info.plist` — it is FlutterFlow's own configuration that gets **mapped to native platform files at build time**. When FF generates the app:
+> - `permissionMessages` entries are mapped to the correct native declarations on both platforms (e.g., `LOCATION` → `<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>` in AndroidManifest.xml + `NSLocationWhenInUseUsageDescription` in Info.plist).
+> - `userDefinedPermissions` entries let you specify the exact iOS (`iosName`) and Android (`androidName`) keys when FF's built-in types don't cover your needs.
+> - The `message.textValue.inputValue` strings become the permission rationale text shown to users when the app requests access.
+>
+> You cannot directly edit `AndroidManifest.xml`, `Info.plist`, or `build.gradle` through the FlutterFlow API. This file is the input that drives their generation.
+
 **Top-level keys:**
 - `permissionMessages`
 - `userDefinedPermissions`
@@ -145,17 +153,32 @@ permissionMessages:
         key: k2j9ttsz                            # i18n key
       textValue:
         inputValue: "This app requires camera access..."
+        mostRecentInputValue: "This app requires camera access..."
 
 userDefinedPermissions:
   - names:
       iosName: NSCameraUsageDescription          # iOS Info.plist key
-      androidName: android.permission.           # Android manifest permission
+      androidName: android.permission.CAMERA     # Android manifest permission
     message:
       translationIdentifier:
         key: 6c6yuxd5
       textValue:
         inputValue: "This app requires camera access..."
+  - type: NOTIFICATIONS                          # Alternative: type-based custom permission
+    message:
+      translationIdentifier:
+        key: fsh8sleo
+      textValue:
+        inputValue: "We use push notifications..."
+        mostRecentInputValue: "We use push notifications..."
 ```
+
+**Two sections, different use cases:**
+
+| Section | When to use | How FF maps it |
+|---|---|---|
+| `permissionMessages` | Standard permissions (CAMERA, LOCATION, etc.) | FF knows the exact native keys for both platforms — you just pick the type and provide a message. |
+| `userDefinedPermissions` | Custom or platform-specific permissions | You manually specify the `iosName` (Info.plist key) and/or `androidName` (Android permission string). Can also use `type` for known types like `NOTIFICATIONS`. |
 
 **Key fields:**
 
@@ -164,9 +187,11 @@ userDefinedPermissions:
 | `permissionMessages` | list | Built-in FF permission types: `CAMERA`, `PHOTO_LIBRARY`, `MICROPHONE`, `LOCATION`, `NOTIFICATIONS`, etc. |
 | `permissionMessages[].permissionType` | enum string | Required. Must be a recognized FF permission type. |
 | `userDefinedPermissions` | list | Custom platform-level permission entries. |
+| `userDefinedPermissions[].type` | enum string | Optional. Known type like `NOTIFICATIONS`. Alternative to specifying `names`. |
 | `userDefinedPermissions[].names.iosName` | string | iOS `Info.plist` key (e.g., `NSPhotoLibraryUsageDescription`). |
-| `userDefinedPermissions[].names.androidName` | string | Android manifest permission string. |
+| `userDefinedPermissions[].names.androidName` | string | Android manifest permission string (e.g., `android.permission.CAMERA`). |
 | `*.message.textValue.inputValue` | string | User-facing permission rationale string. |
+| `*.message.textValue.mostRecentInputValue` | string | Should match `inputValue` — keep both in sync. |
 | `*.message.translationIdentifier.key` | string | Links to `languages.yaml` translations. |
 
 ---
@@ -1009,3 +1034,856 @@ rootGroup: {}                          # Root test group (empty when no tests de
 | `rootGroup` | object | The root test group container. Empty object `{}` when no integration tests have been created. |
 
 > Note: This file is a placeholder when no tests are defined. Test groups and individual test cases are nested within `rootGroup` when tests are created through the FF editor.
+
+---
+
+## custom-file/id-MAIN
+
+**Purpose:** Startup action configuration for the app's `main()` function. Controls which custom actions run before and after app initialization (Firebase, state management, RevenueCat, etc.). The related sub-file `custom-file/id-MAIN/custom-file-code.dart` contains the generated Dart source for `main.dart`.
+
+> **This file only exists when it has content.** If all actions and parameters are removed (via UI or API), the file disappears from the server (API returns 404). It reappears when a user adds an action or parameter in the FF editor.
+
+> **WARNING: Pushing any `custom-file` deletes siblings.** The API treats all `custom-file/id-*` keys as a single collection. Pushing this file alone will delete all other custom files (ANDROID_MANIFEST, PROGUARD, BUILD_GRADLE, etc.). **Always include all existing `custom-file` entries in the same push payload.** See [API Limitation #10](../flutterflow-api-limitations.md#10-pushing-one-custom-file-deletes-all-other-custom-file-entries).
+
+> **Important — this is an abstraction layer.**
+> The config file (`custom-file/id-MAIN`) controls what actions run at startup, and FlutterFlow generates the actual `main.dart` from it at build time. The Dart sub-file (`custom-file/id-MAIN/custom-file-code.dart`) is visible and readable but is **generated/read-only** — editing the config is the supported way to modify startup behavior.
+
+> **`isUnlocked` behavior:**
+> - `false` (default) — FF fully manages `main.dart`. You can only add/remove INITIAL/FINAL actions via the config. The Dart code is regenerated from project settings at build time.
+> - `true` — Raw Dart editing is enabled in the FF editor. When unlocked, a `fullContent` field appears on the config containing the full Dart source as an escaped string. The Dart sub-file is still readable via the API.
+>
+> **Cannot push code via the API when unlocked.** Attempting to push to the `.dart` sub-file collapses the content into the `fullContent` field on the config and does not actually update the editor. To modify `main.dart` when unlocked, **instruct the user to edit it directly in the FlutterFlow editor**.
+
+**Top-level keys:**
+- `type`
+- `identifier` (appears once the file has been customized in FF editor)
+- `isUnlocked`
+- `fullContent` (only when `isUnlocked: true`)
+- `actions`
+- `parameters`
+
+**Schema:**
+```yaml
+type: MAIN                               # File type identifier (always MAIN for this file)
+identifier:
+  name: main.dart                        # Appears once the file has been customized in FF editor
+isUnlocked: false                        # Whether custom Dart edits are unlocked in FF editor
+
+actions:
+  - type: INITIAL_ACTION                 # Runs BEFORE app initialization
+    identifier:
+      name: changeStatusBarColorRed      # Custom action name
+      key: d8rqwp                        # Unique action key
+  - type: FINAL_ACTION                   # Runs AFTER app initialization but before runApp()
+    identifier:
+      key: 4lla8                         # Name is optional if action has no display name
+  - type: INITIAL_ACTION
+    identifier:
+      name: refreshRemoteConfigForDev
+      key: hfpkf
+  - type: FINAL_ACTION
+    identifier:
+      name: pushfireInitialize (PushFire-Lib)
+      key: mtd59
+      projectId: push-fire-lib-mblt3v    # Library project ID (present for library actions)
+
+parameters:                              # Template variables (same structure as ANDROID_MANIFEST)
+  kdq2rm:                                # Parameter ID
+    parameter:
+      identifier:
+        name: myVar                      # Variable name — use {{myVar}} in unlocked code
+      dataType:
+        scalarType: String               # Data type
+    value:
+      inputValue:
+        serializedValue: some value      # Default value
+```
+
+**Key fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `type` | string | Always `MAIN` for this file. |
+| `identifier.name` | string | Always `main.dart`. Appears once the file has been customized. |
+| `isUnlocked` | bool | If `false`, FF manages `main.dart` automatically. If `true`, raw Dart editing is enabled in FF editor and `fullContent` field appears. |
+| `fullContent` | string | Only present when `isUnlocked: true`. Contains the full Dart source as an escaped string. **Read-only via API** — cannot be pushed; instruct users to edit in FF editor. |
+| `actions` | list | Ordered list of custom actions that run during app startup. |
+| `actions[].type` | enum | `INITIAL_ACTION` (runs before app init) or `FINAL_ACTION` (runs after app init, before `runApp()`). |
+| `actions[].identifier.name` | string | Human-readable action name. Optional — some actions only have a key. |
+| `actions[].identifier.key` | string | Unique action key. Required. |
+| `actions[].identifier.projectId` | string | Present only for library actions. References the FF project ID of the library that defines the action. |
+| `parameters` | map | Template variables, keyed by parameter ID. Same structure as `custom-file/id-ANDROID_MANIFEST` parameters. Use `{{variableName}}` syntax in unlocked Dart code. |
+
+### Generated Dart execution order
+
+The sub-file `custom-file/id-MAIN/custom-file-code.dart` contains the full generated `main()` function. Actions map to specific positions in the execution order:
+
+```
+1.  Library value setup          (library FINAL_ACTIONs with projectId — e.g. pushfire API key)
+2.  await initFirebase()
+3.  // Start initial custom actions code
+4.    await actions.changeStatusBarColorRed()    ← INITIAL_ACTION
+5.    await actions.refreshRemoteConfigForDev()  ← INITIAL_ACTION
+6.  // End initial custom actions code
+7.  FFAppState init + persisted state
+8.  RevenueCat init
+9.  Crashlytics setup
+10. RemoteConfig + AppCheck init
+11. // Start final custom actions code
+12.   await actions.oneSignalInitializer()       ← FINAL_ACTION
+13. // End final custom actions code
+14. runApp()
+```
+
+- **INITIAL_ACTIONs** run early — after Firebase init but **before** app state, RevenueCat, Crashlytics, and other service initialization.
+- **FINAL_ACTIONs** run late — **after** all service initialization, just before `runApp()`.
+- **Library actions** (with `projectId`) are handled separately via library value setup at the top of `main()`, not in the initial/final action blocks.
+- The Dart code is **regenerated by FF at build time**. When `isUnlocked: true`, the source also appears as `fullContent` on the config, but **pushing edits to either file does not work** — the API accepts the push but changes are not reflected correctly in the FF editor. Always instruct users to make `main.dart` edits directly in FlutterFlow.
+
+---
+
+## custom-file/id-ANDROID_MANIFEST
+
+**Purpose:** Allows injecting custom XML snippets into specific locations of the generated `AndroidManifest.xml`. Like `permissions.yaml`, this is an abstraction layer — you don't edit the manifest directly. Instead you define "hooks" (XML injection points) and "parameters" (template variables).
+
+> **This file only exists when it has content.** If all hooks and parameters are removed (via UI or API), the file disappears from the server (API returns 404). It reappears when a user adds a hook or parameter in the FF editor.
+
+> **WARNING: Pushing any `custom-file` deletes siblings.** The API treats all `custom-file/id-*` keys as a single collection. Pushing this file alone will delete all other custom files (MAIN, PROGUARD, BUILD_GRADLE, etc.). **Always include all existing `custom-file` entries in the same push payload.** See [API Limitation #10](../flutterflow-api-limitations.md#10-pushing-one-custom-file-deletes-all-other-custom-file-entries).
+
+> **Important — this is NOT the AndroidManifest.xml itself.**
+> This is FlutterFlow's configuration that controls **XML injection into the generated manifest** at build time. The file only appears after a user adds at least one custom tag in the FF editor (Settings > Custom Code > Custom Files > AndroidManifest.xml).
+
+**Top-level keys:**
+- `type`
+- `identifier`
+- `hooks`
+- `parameters`
+
+### Hook Types
+
+Three hook types control where XML is injected in the generated `AndroidManifest.xml`:
+
+| Hook Type | Where it injects in AndroidManifest.xml |
+|---|---|
+| `MANIFEST_ACTIVITY_TAG` | Inside the `<activity>` tag — use for intent filters, meta-data on the main activity |
+| `MANIFEST_APPLICATION_TAG` | Inside the `<application>` tag — use for services, receivers, meta-data at app level |
+| `MANIFEST_APP_COMPONENT_TAG` | Top-level, outside `<application>` — use for `<uses-permission>`, `<queries>`, or other root-level elements |
+
+### Parameters (Template Variables)
+
+- Parameters are template variables defined with a name, data type, and value.
+- Referenced in hook `content` using `{{variableName}}` syntax (double curly braces).
+- At build time, FF replaces `{{variableName}}` with the parameter's value in the generated manifest.
+- Useful for keeping values like API keys, hosts, or schemes configurable without editing each hook.
+
+**Schema:**
+```yaml
+type: ANDROID_MANIFEST                     # File type identifier (always ANDROID_MANIFEST)
+identifier:
+  name: AndroidManifest.xml                # Always AndroidManifest.xml
+
+hooks:                                     # List of XML injection hooks
+  - type: MANIFEST_ACTIVITY_TAG            # Injects inside <activity> tag
+    identifier:
+      name: metadata                       # Human-readable hook name
+      key: uren6h                          # Unique 6-char alphanumeric key
+    content: <data android:scheme="http" android:host="perkspass.page.link"/>  # Raw XML to inject
+
+  - type: MANIFEST_APPLICATION_TAG         # Injects inside <application> tag
+    identifier:
+      name: appplication tag
+      key: 9kbunj
+    content: <data android:scheme="http" android:host="perkspass.page.link"/>
+
+  - type: MANIFEST_APP_COMPONENT_TAG       # Injects at top level, outside <application>
+    identifier:
+      name: app component tag
+      key: 2tw0gd
+    content: <data android:scheme="http" android:host="perkspass.page.link"/>
+
+parameters:                                # Template variables referenced in hook content
+  upm7wd:                                  # Parameter key
+    parameter:
+      identifier:
+        name: newVar                       # Variable name (referenced as {{newVar}} in hook content)
+      dataType:
+        scalarType: String                 # Data type (String, Integer, etc.)
+    value:
+      inputValue:
+        serializedValue: This is the var value  # The variable's value at build time
+```
+
+**Key fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `type` | string | Always `ANDROID_MANIFEST` for this file. |
+| `identifier.name` | string | Always `AndroidManifest.xml`. |
+| `hooks` | list | List of XML injection hooks. Each hook injects content at a specific location in the manifest. |
+| `hooks[].type` | enum | `MANIFEST_ACTIVITY_TAG`, `MANIFEST_APPLICATION_TAG`, or `MANIFEST_APP_COMPONENT_TAG`. |
+| `hooks[].identifier.name` | string | Human-readable hook name. **Must not contain hyphens** — the FF editor rejects them but the API accepts them (validation gap). |
+| `hooks[].identifier.key` | string | Unique 6-char alphanumeric key. |
+| `hooks[].content` | string | Raw XML string to inject. Must be properly quoted in YAML when containing angle brackets or special characters. |
+| `parameters` | map | Map of parameter key to parameter definition. |
+| `parameters.<key>.parameter.identifier.name` | string | Variable name. Referenced in hook `content` as `{{variableName}}`. |
+| `parameters.<key>.parameter.dataType.scalarType` | enum | Data type (`String`, `Integer`, `Double`, `Boolean`, etc.). |
+| `parameters.<key>.value.inputValue.serializedValue` | string | The variable's value, substituted into hook content at build time. |
+
+**API capabilities:**
+
+| Operation | Status | Notes |
+|---|---|---|
+| Reading | Works | Full config with hooks and parameters is readable. |
+| Adding hooks via API | Works | New hooks pushed successfully and appear in FF editor. |
+| Adding parameters via API | Works | New variables pushed successfully and appear in FF editor. |
+| Editing existing hooks | Works | Content and name changes are reflected. |
+| Hook name validation gap | Caution | The API accepts hook names with hyphens, but the FF editor rejects them as "Name contains invalid character." Use camelCase or spaces for names. |
+| XML content quoting | Caution | When hook content contains XML angle brackets (e.g., `<meta-data .../>`), wrap the content value in double quotes in the YAML to prevent parsing issues. |
+
+---
+
+## custom-file/id-PROGUARD
+
+**Purpose:** Allows injecting custom ProGuard rules into the generated `proguard-rules.pro` file for Android builds. Controls code shrinking, obfuscation, and optimization rules.
+
+> **This file only exists when it has content.** If all hooks and parameters are removed (via UI or API), the file disappears from the server (API returns 404). It reappears when a user adds a rule or parameter in the FF editor.
+
+> **WARNING: Pushing any `custom-file` deletes siblings.** The API treats all `custom-file/id-*` keys as a single collection. Pushing this file alone will delete all other custom files (MAIN, ANDROID_MANIFEST, BUILD_GRADLE, etc.). **Always include all existing `custom-file` entries in the same push payload.** See [API Limitation #10](../flutterflow-api-limitations.md#10-pushing-one-custom-file-deletes-all-other-custom-file-entries).
+
+> **Important — this is an abstraction layer.**
+> This config controls **rule injection into the generated `proguard-rules.pro`** at build time. The file only appears after a user adds at least one rule in the FF editor (Settings > Custom Code > Custom Files > proguard-rules.pro). Unlike `custom-file/id-MAIN`, there is no Dart code sub-file — ProGuard rules are plain text.
+
+**Top-level keys:**
+- `type`
+- `identifier`
+- `hooks`
+- `parameters`
+
+### Hook Types
+
+Only one hook type:
+
+| Hook Type | What it injects |
+|---|---|
+| `PROGUARD_RULE` | A ProGuard rule line (e.g., `-keep class com.example.** { *; }`) |
+
+### Schema
+
+```yaml
+type: PROGUARD
+identifier:
+  name: proguard-rules.pro
+
+hooks:
+  - type: PROGUARD_RULE                       # Only hook type for ProGuard
+    identifier:
+      name: roleComment                       # Human-readable name
+      key: z735am                             # Unique hook key
+    content: "-keep class com.example.myapp.** { *; }"   # The ProGuard rule text
+
+parameters:                                    # Template variables — same as MAIN and ANDROID_MANIFEST
+  hgnzpn:
+    parameter:
+      identifier:
+        name: myVar                            # Variable name — use {{myVar}} in rule content
+      dataType:
+        scalarType: String
+    value:
+      inputValue:
+        serializedValue: some value            # Default value
+```
+
+**Key fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `type` | string | Always `PROGUARD` for this file. |
+| `identifier.name` | string | Always `proguard-rules.pro`. |
+| `hooks` | list | ProGuard rules to inject into the generated file. |
+| `hooks[].type` | enum | Always `PROGUARD_RULE`. |
+| `hooks[].identifier.name` | string | Human-readable name for the rule. |
+| `hooks[].identifier.key` | string | Unique key (6 alphanumeric chars). |
+| `hooks[].content` | string | The ProGuard rule text. |
+| `parameters` | map | Template variables keyed by parameter ID. Use `{{variableName}}` in `content` to reference them. Same structure as MAIN and ANDROID_MANIFEST parameters. |
+
+### API capabilities
+
+| Operation | Status | Notes |
+|---|---|---|
+| Reading config | Works | Full hook and parameter data returned. |
+| Adding hooks via API | Expected to work | Same structure as ANDROID_MANIFEST hooks. |
+| Adding parameters via API | Expected to work | Same structure as MAIN/ANDROID_MANIFEST parameters. |
+| Hook name validation gap | Caution | Same as ANDROID_MANIFEST — avoid hyphens in names, use camelCase or spaces. |
+
+---
+
+## custom-file/id-BUILD_GRADLE
+
+**Purpose:** Allows injecting custom entries into specific sections of the generated `build.gradle` file for Android builds — plugins, dependencies, and repositories.
+
+> **This file only exists when it has content.** If all hooks and parameters are removed (via UI or API), the file disappears from the server (API returns 404). It reappears when a user adds an entry or parameter in the FF editor.
+
+> **WARNING: Pushing any `custom-file` deletes siblings.** The API treats all `custom-file/id-*` keys as a single collection. Pushing this file alone will delete all other custom files (MAIN, ANDROID_MANIFEST, PROGUARD, etc.). **Always include all existing `custom-file` entries in the same push payload.** See [API Limitation #10](../flutterflow-api-limitations.md#10-pushing-one-custom-file-deletes-all-other-custom-file-entries).
+
+> **Important — this is an abstraction layer.**
+> This config controls **injection into the generated `build.gradle`** at build time. The file only appears after a user adds at least one entry in the FF editor (Settings > Custom Code > Custom Files > build.gradle). No code sub-file — just config.
+
+**Top-level keys:**
+- `type`
+- `identifier`
+- `hooks`
+- `parameters`
+
+### Hook Types
+
+Three hook types control where content is injected in the generated `build.gradle`:
+
+| Hook Type | Where it injects in build.gradle |
+|---|---|
+| `BUILD_GRADLE_PLUGIN_HOOK` | Inside the `plugins { }` block — use for Gradle plugin declarations |
+| `BUILD_GRADLE_DEPENDENCY_HOOK` | Inside the `dependencies { }` block — use for library dependencies |
+| `BUILD_GRADLE_REPOSITORY_HOOK` | Inside the `repositories { }` block — use for custom Maven/artifact repositories |
+
+### Schema
+
+```yaml
+type: BUILD_GRADLE
+identifier:
+  name: build.gradle
+
+hooks:
+  - type: BUILD_GRADLE_PLUGIN_HOOK
+    identifier:
+      name: gms                                      # Human-readable name
+      key: t36afz                                    # Unique hook key
+    content: id 'com.google.gms' version '4.4.2' apply false
+
+  - type: BUILD_GRADLE_DEPENDENCY_HOOK
+    identifier:
+      name: gmsImpl
+      key: 4bdxxs
+    content: implementation 'com.google.firebase:firebase-analytics:21.5.0'
+
+  - type: BUILD_GRADLE_REPOSITORY_HOOK
+    identifier:
+      name: maven
+      key: mnz0zx
+    content: "maven { url 'https://maven.google.com' }"
+
+parameters:                                           # Template variables — use {{variableName}} in content
+  9r3k4a:
+    parameter:
+      identifier:
+        name: firstvar
+      dataType:
+        scalarType: String
+    value:
+      inputValue:
+        serializedValue: var val
+```
+
+**Key fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `type` | string | Always `BUILD_GRADLE` for this file. |
+| `identifier.name` | string | Always `build.gradle`. |
+| `hooks` | list | Entries to inject into the generated build.gradle. |
+| `hooks[].type` | enum | `BUILD_GRADLE_PLUGIN_HOOK`, `BUILD_GRADLE_DEPENDENCY_HOOK`, or `BUILD_GRADLE_REPOSITORY_HOOK`. |
+| `hooks[].identifier.name` | string | Human-readable name for the entry. |
+| `hooks[].identifier.key` | string | Unique key (6 alphanumeric chars). |
+| `hooks[].content` | string | The Gradle code to inject. Quote values containing braces or special chars. |
+| `parameters` | map | Template variables keyed by parameter ID. Use `{{variableName}}` in `content` to reference them. Same structure as all other custom files. |
+
+### API capabilities
+
+| Operation | Status | Notes |
+|---|---|---|
+| Reading config | Works | Full hook and parameter data returned. |
+| Adding hooks via API | Expected to work | Same structure as ANDROID_MANIFEST hooks. |
+| Adding parameters via API | Expected to work | Same structure as other custom file parameters. |
+| Hook name validation gap | Caution | Same as ANDROID_MANIFEST — avoid hyphens in names, use camelCase or spaces. |
+| Content quoting | Caution | Gradle syntax with braces (e.g., `maven { url '...' }`) should be wrapped in double quotes in the YAML. |
+
+---
+
+## mobile-deployment.yaml
+
+**Purpose:** Mobile deployment configuration for Codemagic CI/CD, including App Store Connect credentials, build versioning, and Play Store settings.
+
+> **WARNING:** This file contains **sensitive credentials** including App Store Connect private keys and Play Store credentials paths. Exercise extreme caution when reading or editing this file. Never log or expose its contents.
+
+**Top-level keys:**
+- `codemagicSettingsMap`
+
+**Schema:**
+```yaml
+codemagicSettingsMap:
+  PROD:                                  # Environment key (PROD, DEV, etc.)
+    appStoreSettings:
+      ascKeyId: AKUAKF2ZCH              # App Store Connect API Key ID
+      ascIssuerId: 57e34d27-22ff-47c3-a187-a2cf6b1807b7  # ASC Issuer ID (UUID)
+      ascPrivateKey: "<redacted>"        # ASC private key (PEM format) — SENSITIVE
+      ascAppId: "6466313325"             # App Store app ID
+    buildVersion:
+      buildVersion: 1.1.8               # Marketing version (CFBundleShortVersionString)
+      buildNumber: 110                   # Build number (CFBundleVersion / versionCode)
+      lastSubmitted: 1.0.99+96          # Last version+build submitted to store
+    playStoreSettings:
+      playTrack: INTERNAL                # Play Store track: INTERNAL, ALPHA, BETA, PRODUCTION
+      playstoreCredentialsPath: codemagic/.../.../playstore_credentials.json  # GCS path to credentials
+      alias: mykey                       # Signing key alias
+```
+
+**Key fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `codemagicSettingsMap` | map | Keyed by environment (`PROD`, `DEV`, etc.). One entry per deployment environment. |
+| `appStoreSettings.ascKeyId` | string | App Store Connect API Key ID. |
+| `appStoreSettings.ascIssuerId` | string | App Store Connect Issuer ID (UUID format). |
+| `appStoreSettings.ascPrivateKey` | string | **SENSITIVE.** App Store Connect private key in PEM format. |
+| `appStoreSettings.ascAppId` | string | Numeric App Store app identifier. |
+| `buildVersion.buildVersion` | string | Marketing version string (e.g., `1.1.8`). |
+| `buildVersion.buildNumber` | int | Incremental build number. |
+| `buildVersion.lastSubmitted` | string | Last version+build submitted to stores (format: `version+buildNumber`). |
+| `playStoreSettings.playTrack` | enum | Play Store release track: `INTERNAL`, `ALPHA`, `BETA`, `PRODUCTION`. |
+| `playStoreSettings.playstoreCredentialsPath` | string | GCS path to the Play Store service account credentials JSON. |
+| `playStoreSettings.alias` | string | Android signing key alias. |
+
+---
+
+## web-publishing.yaml
+
+**Purpose:** Web-specific publishing settings including SEO metadata, page title, status bar color, and screen orientation.
+
+**Top-level keys:**
+- `webSettings`
+
+**Schema:**
+```yaml
+webSettings:
+  PROD:                                  # Environment key (PROD, DEV, etc.)
+    seoDescription: "Idaho's #1 Discount Pass"  # Meta description for SEO
+    pageTitle: GoldPass                  # HTML <title> tag content
+    statusBarColor:
+      value: "4294046968"               # Status bar color (raw ARGB int as string)
+      darkModeColor:
+        value: "4280099880"             # Status bar color in dark mode
+    orientation: PORTRAIT_PRIMARY        # Preferred screen orientation
+```
+
+**Key fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `webSettings` | map | Keyed by environment (`PROD`, `DEV`, etc.). |
+| `webSettings.<ENV>.seoDescription` | string | Meta description tag content for search engines. |
+| `webSettings.<ENV>.pageTitle` | string | HTML `<title>` value shown in browser tabs. |
+| `webSettings.<ENV>.statusBarColor.value` | string | Raw ARGB integer as string for the browser theme/status bar color. |
+| `webSettings.<ENV>.statusBarColor.darkModeColor.value` | string | Dark mode variant of the status bar color. |
+| `webSettings.<ENV>.orientation` | enum | Preferred screen orientation. Known values: `PORTRAIT_PRIMARY`, `LANDSCAPE_PRIMARY`. |
+
+---
+
+## firebase-app-check.yaml
+
+**Purpose:** Firebase App Check configuration for app attestation and abuse prevention.
+
+**Top-level keys:**
+- `enabled`
+- `runTestModeDebugToken`
+
+**Schema:**
+```yaml
+enabled: true                            # Master toggle for App Check
+runTestModeDebugToken: 9218DDCD-D417-4E71-AFFF-A8A8616AECC6  # Debug token for test mode
+```
+
+**Key fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `enabled` | bool | Master toggle for Firebase App Check. |
+| `runTestModeDebugToken` | string | UUID debug token used during development/testing. Allows bypassing App Check attestation in debug builds. |
+
+---
+
+## firebase-remote-config.yaml
+
+**Purpose:** Firebase Remote Config field definitions with default values. Defines the parameters that can be fetched from Firebase Remote Config at runtime.
+
+**Top-level keys:**
+- `enabled`
+- `fields`
+
+**Schema:**
+```yaml
+enabled: true                            # Master toggle for Remote Config
+
+fields:
+  - parameter:
+      identifier:
+        name: newiOSVersion              # Parameter name
+      dataType:
+        scalarType: String               # Data type (String, Integer, Double, Boolean, etc.)
+    serializedDefaultValue: 1.1.1        # Default value used when remote fetch fails
+  - parameter:
+      identifier:
+        name: newAndroidVersion
+      dataType:
+        scalarType: String
+    serializedDefaultValue: 1.1.1
+  - parameter:
+      identifier:
+        name: minIosVersion
+      dataType:
+        scalarType: String
+    serializedDefaultValue: 1.1.1
+  - parameter:
+      identifier:
+        name: minAndroidVersion
+      dataType:
+        scalarType: String
+    serializedDefaultValue: 1.1.1
+```
+
+**Key fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `enabled` | bool | Master toggle for Firebase Remote Config integration. |
+| `fields` | list | All Remote Config parameter definitions. |
+| `fields[].parameter.identifier.name` | string | Parameter name as it appears in the Firebase Remote Config console. |
+| `fields[].parameter.dataType.scalarType` | enum | Data type: `String`, `Integer`, `Double`, `Boolean`, etc. |
+| `fields[].serializedDefaultValue` | string | Default value used when the remote fetch fails or the parameter is not set in the Firebase console. |
+
+---
+
+## firestore-settings.yaml
+
+**Purpose:** Firestore security rules, collection-level permissions, read visibility settings, validation hashes, and Cloud Storage rules configuration.
+
+**Top-level keys:**
+- `rules`
+- `validation`
+- `storageRules`
+
+**Schema:**
+```yaml
+rules:
+  collectionRules:
+    k2ktdun9:                            # Collection key (matches Firestore collection key)
+      creat:                             # NOTE: spelled "creat" not "create" — this is how FF spells it
+        authenticatedUsers: {}
+      read:
+        everyone: {}
+      update:
+        authenticatedUsers: {}
+      delete:
+        noOne: {}
+      isPublic: true                     # Whether the collection is publicly readable
+    vz94s0kh:
+      creat:
+        authenticatedUsers: {}
+      read:
+        authenticatedUsers: {}
+      update:
+        authenticatedUsers: {}
+      delete:
+        authenticatedUsers: {}
+      deleteWhenUserIsDeleted: true      # Cascade delete when the owning user is deleted
+  usersCollectionReadVisibility: READ_VISIBILITY_SELF  # Users can only read their own document
+
+validation:
+  lastValidatedCollectionHash:
+    Establishments: "106055806"          # Hash of last validated schema per collection
+    Users: "130657010"
+  mode: DISABLED                         # Validation mode: DISABLED, ENABLED, etc.
+
+storageRules:
+  excludeFromStorageRules: true          # Exclude this project from generating storage rules
+  rules:
+    userUploadsArePrivate: false         # Whether user-uploaded files are private by default
+```
+
+> **Important:** The YAML uses `creat` (not `create`) for the create permission key. This is how FlutterFlow actually spells it in the YAML. Do NOT attempt to "fix" this spelling — it is intentional and expected by the FF system.
+
+**Permission values:** Each permission field (`creat`, `read`, `update`, `delete`) accepts one of three values: `everyone: {}`, `authenticatedUsers: {}`, or `noOne: {}`.
+
+**Key fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `rules.collectionRules` | map | Keyed by collection key. One entry per Firestore collection. |
+| `rules.collectionRules.<key>.creat` | permission | Create permission. Note: spelled `creat`, not `create`. |
+| `rules.collectionRules.<key>.read` | permission | Read permission. |
+| `rules.collectionRules.<key>.update` | permission | Update permission. |
+| `rules.collectionRules.<key>.delete` | permission | Delete permission. |
+| `rules.collectionRules.<key>.isPublic` | bool | Whether the collection allows public (unauthenticated) reads. |
+| `rules.collectionRules.<key>.deleteWhenUserIsDeleted` | bool | Cascade delete: remove documents when the owning user account is deleted. |
+| `rules.usersCollectionReadVisibility` | enum | Read visibility for the Users collection. Known value: `READ_VISIBILITY_SELF` (users can only read their own document). |
+| `validation.lastValidatedCollectionHash` | map | Hash per collection name, used to detect schema changes since last validation. |
+| `validation.mode` | enum | Validation mode: `DISABLED`, `ENABLED`. |
+| `storageRules.excludeFromStorageRules` | bool | If true, this project does not generate Cloud Storage security rules. |
+| `storageRules.rules.userUploadsArePrivate` | bool | Whether user-uploaded files default to private access. |
+
+---
+
+## algolia.yaml
+
+**Purpose:** Algolia search integration configuration, including API credentials and indexed Firestore collections.
+
+**Top-level keys:**
+- `applicationId`
+- `searchApiKey`
+- `indexedCollections`
+- `enabled`
+
+**Schema:**
+```yaml
+applicationId: SUEUI0E453              # Algolia Application ID
+searchApiKey: 5c8d18d950352fcf5e66ec8d5df04a66  # Algolia Search API key (public/search-only)
+indexedCollections:
+  - name: Establishments                # Firestore collection name
+    key: k2ktdun9                       # Firestore collection key
+enabled: true                           # Master toggle
+```
+
+**Key fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `applicationId` | string | Algolia Application ID. Found in the Algolia dashboard. |
+| `searchApiKey` | string | Algolia Search-Only API key. This is the public key safe for client-side use — not the Admin API key. |
+| `indexedCollections` | list | Firestore collections that are synced to Algolia indices. |
+| `indexedCollections[].name` | string | Firestore collection name (human-readable). |
+| `indexedCollections[].key` | string | Firestore collection key (matches keys in `firestore-settings.yaml`). |
+| `enabled` | bool | Master toggle for Algolia search integration. |
+
+---
+
+## app-query-cache.yaml
+
+**Purpose:** Configuration for cached database queries (request managers) that persist query results to avoid redundant fetches.
+
+**Top-level keys:**
+- `databaseRequestManagers`
+
+**Schema:**
+```yaml
+databaseRequestManagers:
+  - identifier:
+      name: savedDeals                   # Cache entry name
+      key: sefdr                         # Unique key
+    originalNodeKeyRef:
+      key: Container_s5rjtbgg            # Widget key where the query originates
+```
+
+**Key fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `databaseRequestManagers` | list | All cached query definitions. |
+| `databaseRequestManagers[].identifier.name` | string | Human-readable name for the cached query. |
+| `databaseRequestManagers[].identifier.key` | string | Unique key for the cache entry. |
+| `databaseRequestManagers[].originalNodeKeyRef.key` | string | Widget key (typically `Container_*`) where the original database query is defined. Links the cache to its source widget. |
+
+---
+
+## material-theme.yaml
+
+**Purpose:** Material Design version toggle controlling whether the app uses Material 2 or Material 3 design system.
+
+**Top-level keys:**
+- `useMaterial2`
+
+**Schema:**
+```yaml
+useMaterial2: true                       # true = Material 2, false = Material 3
+```
+
+**Key fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `useMaterial2` | bool | When `true`, the app uses Material 2 theming. When `false` (or absent), the app uses Material 3. Material 3 introduces updated color schemes, typography, and widget shapes. |
+
+---
+
+## storyboard.yaml
+
+**Purpose:** Editor-only metadata storing page positions on the FlutterFlow storyboard canvas. Has no functional impact on the built app.
+
+**Top-level keys:**
+- `storyboardPositions`
+
+**Schema:**
+```yaml
+storyboardPositions:
+  Scaffold_q2hw5kk7:                    # Scaffold ID of the page
+    x: 1172.0366954890674               # Horizontal position on canvas
+    y: 583.8096385491203                # Vertical position on canvas
+  Scaffold_ih504krn:
+    x: 803.2030987008528
+    y: 582.2951003122512
+```
+
+**Key fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `storyboardPositions` | map | Keyed by Scaffold ID. One entry per page placed on the storyboard. |
+| `storyboardPositions.<Scaffold_ID>.x` | double | Horizontal position (pixels) of the page on the storyboard canvas. |
+| `storyboardPositions.<Scaffold_ID>.y` | double | Vertical position (pixels) of the page on the storyboard canvas. |
+
+> Note: This is purely editor-level metadata used by the FlutterFlow storyboard view. It has no effect on the built application. Modifying these values only changes where pages appear on the visual canvas in the FF editor.
+
+---
+
+## date-picker.yaml
+
+**Purpose:** Controls which Material date picker style is used in the app (legacy vs modern).
+
+**Top-level keys:**
+- `useLegacyDatePicker`
+
+**Schema:**
+```yaml
+useLegacyDatePicker: false              # false = modern Material date picker, true = legacy style
+```
+
+**Key fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `useLegacyDatePicker` | bool | When `true`, the app uses the legacy Material date picker. When `false` (or absent), the app uses the modern Material date picker style. |
+
+---
+
+## theme/color-scheme
+
+**Purpose:** Full color palette definition for the app. This is a **sub-file** of the `theme` file key — access it with file key `theme/color-scheme`, not just `theme`.
+
+**Top-level keys:**
+- `primary`, `secondary`, `tertiary`, `alternate`
+- `primaryBackground`, `secondaryBackground`
+- `primaryText`, `secondaryText`
+- `accent1`, `accent2`, `accent3`, `accent4`
+- `success`, `warning`, `error`, `info`
+- `customPaletteColors`
+- `darkModeEnabled`
+- `displayDarkMode`
+
+**Schema:**
+```yaml
+primary:                                  # Core Material colors
+  value: "4279461852"                     # Light mode ARGB integer as string
+  darkModeColor:
+    value: "4279461852"                   # Dark mode ARGB integer as string
+secondary:
+  value: "4278190080"
+  darkModeColor:
+    value: "4294967295"
+tertiary:
+  value: "4280582880"
+  darkModeColor:
+    value: "4280582880"
+alternate:
+  value: "4282532418"
+  darkModeColor:
+    value: "4287937484"
+
+primaryBackground:                        # Background colors
+  value: "4294967295"
+  darkModeColor:
+    value: "4278190080"
+secondaryBackground:
+  value: "4294111986"
+  darkModeColor:
+    value: "4282532418"
+
+primaryText:                              # Text colors
+  value: "4278190080"
+  darkModeColor:
+    value: "4294967295"
+secondaryText:
+  value: "4282402630"
+  darkModeColor:
+    value: "4287996332"
+
+accent1:                                  # Accent colors (accent1 through accent4)
+  value: "4284572001"
+  darkModeColor:
+    value: "4293848814"
+accent2:
+  value: "4285887861"
+  darkModeColor:
+    value: "4292927712"
+accent3:
+  value: "4292927712"
+  darkModeColor:
+    value: "4285887861"
+accent4:
+  value: "4293848814"
+  darkModeColor:
+    value: "4284572001"
+
+success:                                  # Semantic colors
+  value: "4278493772"
+  darkModeColor:
+    value: "4278493772"
+warning:
+  value: "4294761484"
+  darkModeColor:
+    value: "4294761484"
+error:
+  value: "4293008445"
+  darkModeColor:
+    value: "4293008445"
+info:
+  value: "4280042644"
+  darkModeColor:
+    value: "4280042644"
+
+customPaletteColors:                      # Project-specific named colors
+  - value: "4294967295"
+    paletteColorName: primaryBtnText      # Custom color name (used in bindings)
+    darkModeColor:
+      value: "4294967295"
+  - value: "4292467161"
+    paletteColorName: lineColor
+    darkModeColor:
+      value: "4280428591"
+  - value: "2550136832"
+    paletteColorName: barrierColor
+    darkModeColor:
+      value: "2550136832"
+
+darkModeEnabled: true                     # Whether dark mode is available in the app
+displayDarkMode: true                     # Whether dark mode toggle is shown in FF editor
+```
+
+**Key fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `primary` | color entry | Primary brand color. Each color entry has `value` (light mode) and `darkModeColor.value` (dark mode). |
+| `secondary` | color entry | Secondary brand color. |
+| `tertiary` | color entry | Tertiary accent color. |
+| `alternate` | color entry | Alternate/surface variant color. |
+| `primaryBackground` | color entry | Main background color. |
+| `secondaryBackground` | color entry | Secondary/card background color. |
+| `primaryText` | color entry | Primary text color. |
+| `secondaryText` | color entry | Secondary/subtitle text color. |
+| `accent1` - `accent4` | color entry | Four accent colors for highlights and decorations. |
+| `success` | color entry | Semantic color for success states. |
+| `warning` | color entry | Semantic color for warning states. |
+| `error` | color entry | Semantic color for error states. |
+| `info` | color entry | Semantic color for informational states. |
+| `customPaletteColors` | list | Project-specific named colors. Each entry has `value`, `paletteColorName`, and `darkModeColor`. |
+| `customPaletteColors[].paletteColorName` | string | Custom color name used in widget bindings and theme references. |
+| `darkModeEnabled` | bool | When `true`, dark mode is available as an option in the built app. |
+| `displayDarkMode` | bool | When `true`, the dark mode toggle is visible in the FlutterFlow editor. |
+
+> Color values are raw ARGB integers stored as strings (e.g., `"4294967295"` = white/0xFFFFFFFF, `"4278190080"` = black/0xFF000000). Every color has both a light mode `value` and a `darkModeColor` variant. This is a sub-file: access it with file key `theme/color-scheme`, not just `theme`.

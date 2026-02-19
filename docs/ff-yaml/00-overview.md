@@ -11,13 +11,14 @@ Every FlutterFlow project is a collection of YAML files accessed via file keys. 
 | `app-details` | App metadata: name, routing config, initial page, auth pages, theme mode, platform settings |
 | `authentication` | Firebase/Supabase auth configuration, providers, login/signup page refs |
 | `theme` | Typography definitions, color palette, breakpoints, widget defaults |
+| `theme/color-scheme` | Full color palette: core, background, text, accent, semantic colors with dark mode variants |
 | `folders` | Page and component folder organization (scaffold-to-folder mapping) |
 | `app-state` | App-wide persisted state variables (shared across all pages) |
 | `app-constants` | Read-only constants available app-wide |
 | `app-assets` | Uploaded asset references (images, fonts, files) |
 | `nav-bar` | Bottom navigation bar configuration (pages, icons, labels) |
 | `app-bar` | App bar configuration |
-| `permissions` | Permission definitions and role-based access rules |
+| `permissions` | Platform permission declarations (CAMERA, LOCATION, etc.) — abstraction layer that FF maps to AndroidManifest.xml and Info.plist at build time |
 | `revenue-cat` | RevenueCat paywall and entitlement configuration |
 | `languages` | Internationalization strings and locale mappings |
 | `page/id-Scaffold_XXX` | Page metadata: name, params, classModel (state fields), route config |
@@ -35,7 +36,7 @@ Every FlutterFlow project is a collection of YAML files accessed via file keys. 
 | `enums/id-XXX` | Enum definition with named values |
 | `collections/id-XXX` | Firestore collection schema: fields, types, subcollections |
 | `agent/id-XXX` | AI agent configuration |
-| `custom-file/id-<TYPE>` | Custom project files (main.dart, AndroidManifest.xml) |
+| `custom-file/id-<TYPE>` | Custom file configs for native platform files. Known types: `MAIN` (main.dart startup actions), `ANDROID_MANIFEST` (XML injection hooks for AndroidManifest.xml), `PROGUARD` (ProGuard rule injection for proguard-rules.pro), `BUILD_GRADLE` (Gradle plugin/dependency/repository injection for build.gradle). Only appear after enabled in FF editor. Sub-file `custom-file/id-MAIN/custom-file-code.dart` contains generated Dart source. |
 | `environment-settings` | Per-environment configuration values (API URLs, keys) |
 | `dependencies` | FlutterFlow library package dependencies |
 | `custom-code-dependencies` | Dart/Flutter pub dependencies for custom code |
@@ -43,16 +44,25 @@ Every FlutterFlow project is a collection of YAML files accessed via file keys. 
 | `firebase-analytics` | Firebase Analytics settings |
 | `firebase-crashlytics` | Firebase Crashlytics settings |
 | `firebase-performance-monitoring` | Firebase Performance Monitoring settings |
+| `firebase-app-check` | Firebase App Check configuration and debug token |
+| `firebase-remote-config` | Firebase Remote Config — field definitions with default values |
+| `firestore-settings` | Firestore security rules (per-collection CRUD permissions), storage rules, validation hashes |
 | `push-notifications` | Push notification configuration |
 | `google-maps` | Google Maps API keys per platform |
 | `ad-mob` | AdMob advertising configuration |
+| `algolia` | Algolia search integration — app ID, API key, indexed collections |
 | `app-assets` | App icon, splash screen, error image settings |
 | `platforms` | Platform enablement flags (web, etc.) |
+| `mobile-deployment` | Codemagic CI/CD settings — App Store Connect credentials, build version/number, Play Store track, signing config |
+| `web-publishing` | Web platform settings — SEO description, page title, status bar color, orientation |
 | `library-values` | Values passed to FlutterFlow library dependencies |
 | `library-configurations/id-<projectId>` | Route overrides for library pages |
 | `download-code-settings` | Code download/GitHub push settings |
 | `tests` | FlutterFlow test runner configuration |
-| `material-theme` | Material 2 vs Material 3 toggle |
+| `app-query-cache` | Named database request cache managers |
+| `date-picker` | Date picker style toggle (legacy vs modern Material date picker) |
+| `material-theme` | Material Design version toggle (Material 2 vs Material 3) |
+| `storyboard` | Editor-only page positions on the FF storyboard canvas (no functional impact) |
 | `miscellaneous` | Misc app-level settings and feature flags |
 
 ---

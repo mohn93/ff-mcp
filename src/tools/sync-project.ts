@@ -7,6 +7,7 @@ import {
   cacheWriteMeta,
   cacheWrite,
   cacheMeta,
+  cacheClear,
   type CacheMeta,
 } from "../utils/cache.js";
 import { fetchOneFile } from "./list-pages.js";
@@ -84,6 +85,10 @@ export function registerSyncProjectTool(
           };
         }
       }
+
+      // Clear stale cache before re-syncing so files that no longer exist
+      // on the server are removed instead of persisting as stale data.
+      await cacheClear(projectId);
 
       // Primary path: bulk fetch entire project as one ZIP
       try {
