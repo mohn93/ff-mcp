@@ -140,25 +140,55 @@ Ask your AI assistant to list your FlutterFlow projects, inspect pages, or explo
 - *"What API endpoints are configured?"*
 - *"Show me the theme colors"*
 
-## Important: Limitations and Cautions
+## How It Works Under the Hood
 
-### Editing Requires Care
+This MCP is designed to make AI agents as effective as possible when working with FlutterFlow. Here's what makes it work well:
 
-While this MCP can push YAML changes to your FlutterFlow project, **edits should be treated with caution**:
+### Smart Local Caching
 
-- **Always validate first** — Use `validate_yaml` before every `update_project_yaml` call. Validation catches syntax errors but cannot catch all semantic mistakes.
-- **Review before pushing** — Ask your AI assistant to show you the exact YAML changes before they are pushed. Understand what will change.
-- **FlutterFlow has no undo for API changes** — Changes pushed through the API are applied immediately. There is no built-in undo button for API-pushed edits. You can revert using FlutterFlow's version history, but it's better to prevent bad edits than to fix them.
-- **Start with read-only exploration** — Get comfortable using the read tools (`get_page_summary`, `find_component_usages`, etc.) before attempting edits.
-- **Node-level edits are safer** — Edit individual widgets via node-level file keys instead of replacing entire page YAML. This reduces the blast radius of mistakes.
+Instead of hitting the FlutterFlow API for every question, the MCP downloads your entire project once (`sync_project`) and caches it locally. After that, most tools read from the cache — making them **instant and free of API rate limits**. If you've made changes in FlutterFlow, just re-sync to refresh the cache.
 
-### Known Technical Limitations
+### Built-in Documentation
 
-- **Large pages may fail** — Some large pages can exceed buffer limits during ZIP decode. Use node-level sub-files for these pages instead.
-- **Full project YAML fetch can be slow** — Fetching all YAML without a `fileName` parameter may exceed buffer/transport limits on large projects. Use `sync_project` to cache everything locally first.
-- **Rate limiting** — `list_pages` batches requests 5 at a time to avoid FlutterFlow API rate limits. Pages that fail to fetch still appear with scaffold ID and folder info.
-- **Cache staleness** — Cache-based tools (`get_page_summary`, `get_component_summary`, etc.) depend on a local cache created by `sync_project`. If your project has been edited in FlutterFlow since the last sync, re-run `sync_project` with `force: true` to refresh.
-- **No real-time sync** — This is a snapshot-based tool. It reads and writes YAML at a point in time. It does not watch for live changes in the FlutterFlow editor.
+AI models don't natively understand FlutterFlow's internal structure. This MCP ships with **21 reference documents** covering every widget type, action, variable, theme setting, and editing pattern. The AI can look up exactly how a Button, Column, or Navigation action is structured — so it doesn't have to guess.
+
+### Guided Editing Workflow
+
+Before making any change, the AI can call `get_editing_guide` with a plain-English description of what it wants to do (e.g., *"change the button color on the login page"*). The MCP returns the exact steps, relevant documentation, and rules to follow — reducing the chance of mistakes.
+
+### 25 Purpose-Built Tools
+
+Rather than one generic "read project" tool, the MCP provides **25 specialized tools** — each designed for a specific task. Want to know where a component is used? There's a dedicated tool for that. Want to see all navigation actions pointing to a page? There's one for that too. This means the AI always picks the right tool for the job instead of downloading everything and searching through it.
+
+## Limitations and Cautions
+
+### Be Careful with Edits
+
+This MCP can make changes to your FlutterFlow project, but **edits should be treated with care**:
+
+- **Always review before pushing** — Ask your AI assistant to show you exactly what it plans to change before it pushes anything. Make sure you understand the change.
+- **There's no undo button for API changes** — Changes are applied immediately to your project. You can roll back using FlutterFlow's version history, but it's better to prevent a bad edit than to fix one.
+- **Start with read-only tasks** — Get comfortable asking questions about your project (page summaries, component usage, theme inspection) before asking the AI to modify anything.
+- **Smaller edits are safer** — Editing a single widget is safer than replacing an entire page. The AI knows to make targeted changes, but it's good to be aware.
+
+### What the FlutterFlow API Can't Do
+
+These are limitations in FlutterFlow's own API. They affect any tool that connects to FlutterFlow, not just this MCP.
+
+- **Custom code can be read but not edited** — The AI can read your custom actions, custom functions, and custom widgets, but it **cannot push code changes** back to FlutterFlow. The API doesn't support it properly — attempting to push code corrupts the FlutterFlow editor. Instead, the AI will show you the modified code and you copy-paste it into the FlutterFlow code editor.
+- **Unlocked `main.dart` can't be updated** — If you've unlocked `main.dart` for raw Dart editing, the AI can read it but can't push code changes. Startup/shutdown action lists can still be modified.
+- **Platform config files are indirect** — You can't directly edit `AndroidManifest.xml`, `Info.plist`, or `build.gradle`. Instead, you configure hooks and settings in FlutterFlow, which generates those files for you. The AI can read and modify those hooks.
+- **Editing platform config files requires extra care** — FlutterFlow groups all platform config files together internally. If the AI pushes a change to just one (e.g., Android Manifest), FlutterFlow may delete the others (e.g., ProGuard rules, Gradle config). The MCP handles this by always including all existing files in the same push, but it's something to be aware of.
+- **Disabling conditional actions works differently** — In the FlutterFlow editor, you can toggle a conditional action on/off with a switch. The API handles this slightly differently, so the AI uses a workaround that achieves the same result.
+- **Validation isn't perfect** — The validation step catches most errors, but occasionally something that passes validation can still fail when pushed. This is rare, but it's why reviewing changes before pushing is important.
+
+### General Limitations
+
+- **No live sync** — The MCP works with a snapshot of your project. It doesn't watch for changes you make in the FlutterFlow editor in real time. If you've been editing in FlutterFlow, re-sync before asking the AI to make changes.
+- **Very large pages** — Some extremely large pages may fail to load. The AI can work around this by loading individual widgets instead of the whole page.
+- **Cache can go stale** — If you edit your project in FlutterFlow after syncing, the AI's local copy is outdated. Re-run the sync (the AI will tell you when it detects stale data).
+
+> For the full technical details on each API limitation, see [`docs/flutterflow-api-limitations.md`](docs/flutterflow-api-limitations.md).
 
 ## Tools
 
