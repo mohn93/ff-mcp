@@ -229,3 +229,20 @@ Pushing a single `custom-file/id-ANDROID_MANIFEST` should only affect that file,
 
 **Suggestion:** Either scope the update to only the file keys included in the push (like other top-level keys), or return an error/warning when a push would implicitly delete sibling `custom-file` entries.
 
+---
+
+## 11. `listProjects` Does Not Return All Accessible Projects
+
+**Problem:** The `listProjects` endpoint does not reliably return all projects the authenticated user has access to. Some projects — particularly those shared with the user or belonging to a team — may be missing from the response, even though the user can open and edit them in the FlutterFlow editor.
+
+**Impact:** Users who rely on `list_projects` to discover their projects may not see all of them. This can cause confusion when a project they're actively working on doesn't appear in the list.
+
+**Workaround:** Instead of relying on `list_projects` to find a project, copy the project ID directly from the FlutterFlow editor:
+
+1. Open the project in FlutterFlow
+2. Click the **project name** in the top-left corner of the editor
+3. Click **Copy** next to the project ID
+4. Paste the project ID directly into your AI assistant prompt (e.g., *"Sync project `abc123def`"*)
+
+**Suggestion:** The `listProjects` endpoint should return all projects the user has access to, including shared and team projects, matching what appears in the FlutterFlow dashboard.
+

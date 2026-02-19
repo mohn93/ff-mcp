@@ -8,7 +8,7 @@ export function registerListProjectsTool(
 ) {
   server.tool(
     "list_projects",
-    "List all FlutterFlow projects for the authenticated user",
+    "List FlutterFlow projects for the authenticated user. NOTE: This may not return all projects you have access to (shared/team projects can be missing). If a project is missing, copy its ID directly from the FlutterFlow editor (click the project name in the top-left corner).",
     {
       project_type: z
         .string()
@@ -22,6 +22,10 @@ export function registerListProjectsTool(
           {
             type: "text" as const,
             text: JSON.stringify(result, null, 2),
+          },
+          {
+            type: "text" as const,
+            text: "\n---\n**Tip:** This list may not include all projects you have access to (shared/team projects can be missing). If you don't see a project here, copy its ID directly from the FlutterFlow editor: click the project name (top-left corner) and copy the project ID.",
           },
         ],
       };

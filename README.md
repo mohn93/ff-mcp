@@ -181,6 +181,7 @@ These are limitations in FlutterFlow's own API. They affect any tool that connec
 - **Editing platform config files requires extra care** — FlutterFlow groups all platform config files together internally. If the AI pushes a change to just one (e.g., Android Manifest), FlutterFlow may delete the others (e.g., ProGuard rules, Gradle config). The MCP handles this by always including all existing files in the same push, but it's something to be aware of.
 - **Disabling conditional actions works differently** — In the FlutterFlow editor, you can toggle a conditional action on/off with a switch. The API handles this slightly differently, so the AI uses a workaround that achieves the same result.
 - **Validation isn't perfect** — The validation step catches most errors, but occasionally something that passes validation can still fail when pushed. This is rare, but it's why reviewing changes before pushing is important.
+- **Project list may be incomplete** — The API may not return all projects you have access to, especially shared or team projects. If a project is missing, copy its ID directly from the FlutterFlow editor (click the project name in the top-left corner) and paste it into your AI prompt.
 
 ### General Limitations
 
