@@ -87,6 +87,34 @@ responseOptions:
   responseType: TEXT
 description: A helper`;
 
+const APP_ACTION_YAML = `identifier:
+  name: checkUpdateBlock
+  key: ld3jo3
+actions:
+  rootAction:
+    key: dmm3dw7g
+    action:
+      customAction:
+        customActionIdentifier:
+          name: checkAppUpdateStatus
+          key: zjg1l
+description: "Checks for app updates"`;
+
+const CUSTOM_FILE_YAML = `type: SOME_TYPE
+isUnlocked: false
+actions:
+  - type: INITIAL_ACTION
+    identifier:
+      name: doSomething
+      key: abc12
+  - type: FINAL_ACTION
+    identifier:
+      name: doOther
+      key: def34
+  - type: INITIAL_ACTION
+    identifier:
+      key: ghi56`;
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -327,5 +355,90 @@ describe("get_custom_code handler", () => {
     expect(text).toContain("```dart");
     expect(text).toContain("Future<bool> myAction");
     expect(text).toContain("```");
+  });
+
+  it("parses app action components (name, root action type)", async () => {
+    mockedCacheMeta.mockResolvedValue({
+      lastSyncedAt: "2025-01-01",
+      fileCount: 10,
+      syncMethod: "bulk",
+    });
+
+    mockedListCachedKeys.mockImplementation(async (_pid, prefix) => {
+      if (prefix === "app-action-components/id-") return ["app-action-components/id-ld3jo3"];
+      return [];
+    });
+
+    mockedCacheRead.mockImplementation(async (_pid, key) => {
+      if (key === "app-action-components/id-ld3jo3") return APP_ACTION_YAML;
+      return null;
+    });
+
+    const handler = getHandler("get_custom_code");
+    const result = await handler({ projectId: "proj-1", type: "app-actions" });
+    const text = result.content[0].text;
+
+    expect(text).toContain("## App Action Components (1)");
+    expect(text).toContain("### checkUpdateBlock");
+    expect(text).toContain("Key: ld3jo3");
+    expect(text).toContain("Root action: customAction(checkAppUpdateStatus)");
+    expect(text).toContain('Description: "Checks for app updates"');
+  });
+
+  it("parses custom files (type, action counts, excludes MAIN)", async () => {
+    mockedCacheMeta.mockResolvedValue({
+      lastSyncedAt: "2025-01-01",
+      fileCount: 10,
+      syncMethod: "bulk",
+    });
+
+    mockedListCachedKeys.mockImplementation(async (_pid, prefix) => {
+      if (prefix === "custom-file/id-") return ["custom-file/id-MAIN", "custom-file/id-OTHER"];
+      return [];
+    });
+
+    mockedCacheRead.mockImplementation(async (_pid, key) => {
+      if (key === "custom-file/id-OTHER") return CUSTOM_FILE_YAML;
+      return null;
+    });
+
+    const handler = getHandler("get_custom_code");
+    const result = await handler({ projectId: "proj-1", type: "custom-files" });
+    const text = result.content[0].text;
+
+    expect(text).toContain("## Custom Files (1)");
+    expect(text).not.toContain("MAIN");
+    expect(text).toContain("Type: SOME_TYPE");
+    expect(text).toContain("Actions: 2 initial, 1 final");
+  });
+
+  it("type='all' includes app-actions and custom-files categories", async () => {
+    mockedCacheMeta.mockResolvedValue({
+      lastSyncedAt: "2025-01-01",
+      fileCount: 10,
+      syncMethod: "bulk",
+    });
+
+    mockedListCachedKeys.mockImplementation(async (_pid, prefix) => {
+      if (prefix === "custom-actions/id-") return ["custom-actions/id-abc123"];
+      if (prefix === "app-action-components/id-") return ["app-action-components/id-ld3jo3"];
+      if (prefix === "custom-file/id-") return ["custom-file/id-OTHER"];
+      return [];
+    });
+
+    mockedCacheRead.mockImplementation(async (_pid, key) => {
+      if (key === "custom-actions/id-abc123") return ACTION_YAML;
+      if (key === "app-action-components/id-ld3jo3") return APP_ACTION_YAML;
+      if (key === "custom-file/id-OTHER") return CUSTOM_FILE_YAML;
+      return null;
+    });
+
+    const handler = getHandler("get_custom_code");
+    const result = await handler({ projectId: "proj-1", type: "all" });
+    const text = result.content[0].text;
+
+    expect(text).toContain("## Custom Actions (1)");
+    expect(text).toContain("## App Action Components (1)");
+    expect(text).toContain("## Custom Files (1)");
   });
 });

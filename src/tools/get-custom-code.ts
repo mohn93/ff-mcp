@@ -50,7 +50,25 @@ interface AIAgent {
   description: string;
 }
 
-type Category = "actions" | "functions" | "widgets" | "agents";
+interface AppActionComponent {
+  name: string;
+  key: string;
+  fileKey: string;
+  rootActionType: string;
+  rootActionName: string;
+  description: string;
+}
+
+interface CustomFile {
+  name: string;
+  key: string;
+  fileKey: string;
+  fileType: string;
+  initialCount: number;
+  finalCount: number;
+}
+
+type Category = "actions" | "functions" | "widgets" | "agents" | "app-actions" | "custom-files";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -131,6 +149,26 @@ function formatAgent(agent: AIAgent): string {
   if (agent.description) {
     lines.push(`Description: ${agent.description}`);
   }
+  return lines.join("\n");
+}
+
+function formatAppAction(action: AppActionComponent): string {
+  const lines: string[] = [];
+  lines.push(`### ${action.name}`);
+  lines.push(`Key: ${action.key} | File: \`${action.fileKey}\``);
+  lines.push(`Root action: ${action.rootActionType}(${action.rootActionName})`);
+  if (action.description) {
+    lines.push(`Description: "${action.description}"`);
+  }
+  return lines.join("\n");
+}
+
+function formatCustomFile(file: CustomFile): string {
+  const lines: string[] = [];
+  lines.push(`### ${file.name}`);
+  lines.push(`Key: ${file.key} | File: \`${file.fileKey}\``);
+  lines.push(`Type: ${file.fileType}`);
+  lines.push(`Actions: ${file.initialCount} initial, ${file.finalCount} final`);
   return lines.join("\n");
 }
 
@@ -286,6 +324,84 @@ async function processAgents(
   }).then((results) => results.filter((r): r is AIAgent => r !== null));
 }
 
+async function processAppActions(
+  projectId: string,
+  nameFilter: string | undefined
+): Promise<AppActionComponent[]> {
+  const allKeys = await listCachedKeys(projectId, "app-action-components/id-");
+  const topKeys = allKeys.filter((k) => /^app-action-components\/id-[a-z0-9]+$/i.test(k));
+
+  return batchProcess(topKeys, 10, async (fileKey): Promise<AppActionComponent | null> => {
+    const content = await cacheRead(projectId, fileKey);
+    if (!content) return null;
+    const doc = YAML.parse(content) as Record<string, unknown>;
+    const id = doc.identifier as Record<string, unknown> | undefined;
+    const name = (id?.name as string) || "unknown";
+    if (nameFilter && name.toLowerCase() !== nameFilter.toLowerCase()) return null;
+
+    const idKey = (id?.key as string) || fileKey.match(/id-([a-z0-9]+)$/i)?.[1] || "unknown";
+    const description = (doc.description as string) || "";
+
+    // Extract root action type and name
+    let rootActionType = "unknown";
+    let rootActionName = "unknown";
+    const actions = doc.actions as Record<string, unknown> | undefined;
+    const rootAction = actions?.rootAction as Record<string, unknown> | undefined;
+    const actionObj = rootAction?.action as Record<string, unknown> | undefined;
+    if (actionObj) {
+      const actionKeys = Object.keys(actionObj);
+      if (actionKeys.length > 0) {
+        rootActionType = actionKeys[0];
+        const actionBody = actionObj[rootActionType] as Record<string, unknown> | undefined;
+        if (actionBody) {
+          // Look for a sub-key ending in "Identifier" to get the name
+          for (const subKey of Object.keys(actionBody)) {
+            if (subKey.endsWith("Identifier")) {
+              const identifierObj = actionBody[subKey] as Record<string, unknown> | undefined;
+              rootActionName = (identifierObj?.name as string) || rootActionName;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    return { name, key: idKey, fileKey, rootActionType, rootActionName, description };
+  }).then((results) => results.filter((r): r is AppActionComponent => r !== null));
+}
+
+async function processCustomFiles(
+  projectId: string,
+  nameFilter: string | undefined
+): Promise<CustomFile[]> {
+  const allKeys = await listCachedKeys(projectId, "custom-file/id-");
+  const topKeys = allKeys.filter(
+    (k) => /^custom-file\/id-[^/]+$/i.test(k) && k !== "custom-file/id-MAIN"
+  );
+
+  return batchProcess(topKeys, 10, async (fileKey): Promise<CustomFile | null> => {
+    const content = await cacheRead(projectId, fileKey);
+    if (!content) return null;
+    const doc = YAML.parse(content) as Record<string, unknown>;
+
+    const keyMatch = fileKey.match(/^custom-file\/id-(.+)$/i);
+    const key = keyMatch?.[1] || "unknown";
+    const name = key;
+    if (nameFilter && name.toLowerCase() !== nameFilter.toLowerCase()) return null;
+
+    const fileType = (doc.type as string) || "UNKNOWN";
+    const actions = (doc.actions as Record<string, unknown>[]) || [];
+    let initialCount = 0;
+    let finalCount = 0;
+    for (const action of actions) {
+      if (action.type === "INITIAL_ACTION") initialCount++;
+      else if (action.type === "FINAL_ACTION") finalCount++;
+    }
+
+    return { name, key, fileKey, fileType, initialCount, finalCount };
+  }).then((results) => results.filter((r): r is CustomFile => r !== null));
+}
+
 // ---------------------------------------------------------------------------
 // Tool registration
 // ---------------------------------------------------------------------------
@@ -293,11 +409,11 @@ async function processAgents(
 export function registerGetCustomCodeTool(server: McpServer) {
   server.tool(
     "get_custom_code",
-    "Get custom actions, functions, widgets, and AI agents from local cache — signatures, arguments, return types, and optionally Dart source code. No API calls. Run sync_project first if not cached.",
+    "Get custom actions, functions, widgets, AI agents, app action components, and custom files from local cache — signatures, arguments, return types, and optionally Dart source code. No API calls. Run sync_project first if not cached.",
     {
       projectId: z.string().describe("The FlutterFlow project ID"),
       type: z
-        .enum(["actions", "functions", "widgets", "agents", "all"])
+        .enum(["actions", "functions", "widgets", "agents", "app-actions", "custom-files", "all"])
         .optional()
         .default("all")
         .describe("Type of custom code to retrieve"),
@@ -326,7 +442,7 @@ export function registerGetCustomCodeTool(server: McpServer) {
 
       const categories: Category[] =
         type === "all"
-          ? ["actions", "functions", "widgets", "agents"]
+          ? ["actions", "functions", "widgets", "agents", "app-actions", "custom-files"]
           : [type];
 
       const sections: string[] = [];
@@ -351,6 +467,16 @@ export function registerGetCustomCodeTool(server: McpServer) {
           const items = await processAgents(projectId, name);
           if (items.length > 0) {
             sections.push(`## AI Agents (${items.length})\n\n${items.map(formatAgent).join("\n\n")}`);
+          }
+        } else if (cat === "app-actions") {
+          const items = await processAppActions(projectId, name);
+          if (items.length > 0) {
+            sections.push(`## App Action Components (${items.length})\n\n${items.map(formatAppAction).join("\n\n")}`);
+          }
+        } else if (cat === "custom-files") {
+          const items = await processCustomFiles(projectId, name);
+          if (items.length > 0) {
+            sections.push(`## Custom Files (${items.length})\n\n${items.map(formatCustomFile).join("\n\n")}`);
           }
         }
       }
