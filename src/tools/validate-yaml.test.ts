@@ -50,8 +50,58 @@ describe("validate_yaml tool", () => {
       fileContent: "invalid: yaml",
     });
 
-    const parsed = JSON.parse(result.content[0].text);
+    const text = result.content[0].text;
+    // Text now contains JSON + hint suffix; extract JSON portion
+    const jsonPart = text.substring(0, text.indexOf("\n\nHint:"));
+    const parsed = JSON.parse(jsonPart);
     expect(parsed.valid).toBe(false);
     expect(parsed.errors).toContain("Missing required field: name");
+  });
+
+  it("includes widget-specific doc hint when validation fails with a widget fileKey", async () => {
+    const errorResult = { valid: false, errors: ["Unknown field name 'badField'"] };
+    mockClient.validateProjectYaml.mockResolvedValue(errorResult);
+
+    const handler = getHandler("validate_yaml");
+    const result = await handler({
+      projectId: "proj-123",
+      fileKey: "page/id-Scaffold_abc/page-widget-tree-outline/node/id-Button_xyz",
+      fileContent: "badField: true",
+    });
+
+    const text = result.content[0].text;
+    expect(text).toContain("get_yaml_docs");
+    expect(text).toContain("Button");
+  });
+
+  it("includes generic doc hint when validation fails with a non-widget fileKey", async () => {
+    const errorResult = { valid: false, errors: ["Missing required field"] };
+    mockClient.validateProjectYaml.mockResolvedValue(errorResult);
+
+    const handler = getHandler("validate_yaml");
+    const result = await handler({
+      projectId: "proj-123",
+      fileKey: "app-details",
+      fileContent: "invalid: yaml",
+    });
+
+    const text = result.content[0].text;
+    expect(text).toContain("get_yaml_docs");
+    expect(text).not.toContain("Button");
+  });
+
+  it("does not include doc hint when validation succeeds", async () => {
+    const okResult = { valid: true };
+    mockClient.validateProjectYaml.mockResolvedValue(okResult);
+
+    const handler = getHandler("validate_yaml");
+    const result = await handler({
+      projectId: "proj-123",
+      fileKey: "page/id-Scaffold_abc/page-widget-tree-outline/node/id-Button_xyz",
+      fileContent: "key: Button_xyz",
+    });
+
+    const text = result.content[0].text;
+    expect(text).not.toContain("Hint");
   });
 });
