@@ -28,6 +28,7 @@ import { registerGetDataModelsTool } from "./tools/get-data-models.js";
 import { registerGetCustomCodeTool } from "./tools/get-custom-code.js";
 import { registerGetProjectConfigTool } from "./tools/get-project-config.js";
 import { registerGetThemeTool } from "./tools/get-theme.js";
+import { registerGetEditingGuideTool } from "./tools/get-editing-guide.js";
 
 const server = new McpServer({
   name: "ff-mcp",
@@ -56,6 +57,7 @@ registerGetDataModelsTool(server);
 registerGetCustomCodeTool(server);
 registerGetProjectConfigTool(server);
 registerGetThemeTool(server);
+registerGetEditingGuideTool(server);
 
 // Register resources
 registerResources(server, client);

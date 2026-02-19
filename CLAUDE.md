@@ -32,7 +32,7 @@ Requires `FLUTTERFLOW_API_TOKEN` env var (Bearer token from FlutterFlow > Accoun
 
 Every tool/resource/prompt follows the same pattern: a `register*` function that takes `(server, client?)` and calls `server.tool()`, `server.resource()`, or `server.prompt()`. New tools go in `src/tools/`, new prompts in `src/prompts/`, new resources in `src/resources/`. Register them in `src/index.ts`.
 
-### Tools (19)
+### Tools (20)
 
 | Tool | File | Purpose |
 |------|------|---------|
@@ -55,6 +55,7 @@ Every tool/resource/prompt follows the same pattern: a `register*` function that
 | `get_custom_code` | `tools/get-custom-code.ts` | Cache-based custom actions, functions, widgets, AI agents (with optional Dart source) |
 | `get_project_config` | `tools/get-project-config.ts` | Cache-based project config (app details, auth, nav bar, permissions, services) |
 | `get_theme` | `tools/get-theme.ts` | Cache-based theme colors, typography, breakpoints, widget defaults |
+| `get_editing_guide` | `tools/get-editing-guide.ts` | Workflow + doc guide for editing tasks (call before modifying YAML) |
 
 ### Utilities
 
@@ -63,6 +64,7 @@ Every tool/resource/prompt follows the same pattern: a `register*` function that
 - `utils/cache.ts` — Local cache functions: `cacheRead`, `cacheWrite`, `cacheWriteBulk`, `cacheMeta`, `listCachedKeys`
 - `utils/resolve-data-type.ts` — `resolveDataType()`: resolves FF data type objects to readable strings (e.g. `List<String>`, `DataStruct:MyStruct`)
 - `utils/batch-process.ts` — `batchProcess()`: process items in parallel batches to avoid overwhelming the file system
+- `utils/topic-map.ts` — Shared `TOPIC_MAP`, `DOCS_DIR`, `listDocFiles()`, `readDoc()` for doc resolution across tools
 
 ## FlutterFlow YAML Conventions
 
