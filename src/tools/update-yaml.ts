@@ -9,7 +9,7 @@ export function registerUpdateYamlTool(
 ) {
   server.tool(
     "update_project_yaml",
-    "Push YAML changes to a FlutterFlow project. IMPORTANT: Always call validate_yaml first to check for errors before updating.",
+    "Push YAML changes to a FlutterFlow project. IMPORTANT: Always call validate_yaml first to check for errors before updating. For best results, call get_editing_guide before writing YAML to get the correct workflow and schema documentation.",
     {
       projectId: z.string().describe("The FlutterFlow project ID"),
       fileKeyToContent: z
