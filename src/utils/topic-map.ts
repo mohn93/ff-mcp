@@ -86,6 +86,13 @@ export const TOPIC_MAP: Record<string, string> = {
   parametervalues: "03-components.md",
   callback: "03-components.md",
   executecallbackaction: "03-components.md",
+  // Internationalization
+  translation: "01-project-files.md",
+  translations: "01-project-files.md",
+  i18n: "01-project-files.md",
+  localization: "01-project-files.md",
+  translatabletext: "01-project-files.md",
+  languages: "01-project-files.md",
   // Universal patterns
   inputvalue: "README.md",
   mostrecentinputvalue: "README.md",

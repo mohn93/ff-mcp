@@ -831,4 +831,19 @@ inputValue:
     value: "4294967295"        # ARGB integer as string
 ```
 
+**Translatable text (i18n):**
+
+Used when passing a string that should be translated at runtime based on the app's locale. Wraps `translationIdentifier` and `textValue` inside `inputValue.translatableText`. Commonly used in component parameter passes to make per-instance text translatable.
+
+```yaml
+inputValue:
+  translatableText:
+    translationIdentifier:
+      key: ms01ttl1            # References languages/translation/id-ms01ttl1
+    textValue:
+      inputValue: Histamine / Low DAO   # English default
+```
+
+Each key must have a corresponding translation file at `languages/translation/id-<key>` with entries for all supported languages. See `01-project-files.md` for the translation file schema.
+
 The `mostRecentInputValue` field must always stay in sync with `inputValue` when both are present.

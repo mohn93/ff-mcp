@@ -444,6 +444,69 @@ persistLanguageSelection: true         # Remember user's language choice
 
 ---
 
+## languages/translation/id-{key} (Translation Files)
+
+**Purpose:** Individual translation entries for user-defined translatable strings. Each file maps a unique key to translated text across all supported languages.
+
+**File key pattern:** `languages/translation/id-<key>` (e.g., `languages/translation/id-ttk654j0`)
+
+**Schema:**
+```yaml
+translationIdentifier:
+  key: ttk654j0                # Unique translation key (8-char alphanumeric)
+translations:
+  - language:
+      language: en             # ISO 639-1 code (must match languages.yaml)
+    text: Continue             # Translated text for this language
+  - language:
+      language: es
+    text: Continuar
+isFixed: false                 # false = user-editable, true = system/preset string
+```
+
+**Key fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `translationIdentifier.key` | string | Unique key matching the file key suffix. Referenced by widgets and parameter passes. |
+| `translations` | list | One entry per language. Must include all languages from `languages.yaml`. |
+| `translations[].language.language` | string | ISO 639-1 code (`en`, `es`, `fr`, etc.) |
+| `translations[].text` | string | Translated text. Empty string `""` = untranslated (falls back to primary language). |
+| `isFixed` | bool | `true` for system preset strings, `false` for user-defined translations. |
+
+### Where translation keys are referenced
+
+Translation keys appear in two contexts:
+
+**1. On Text widgets** — via `translationIdentifier` in the `text` prop:
+```yaml
+# Widget-level translation (static, per-widget)
+text:
+  translationIdentifier:
+    key: ttk654j0
+  textValue:
+    inputValue: Continue       # English default / editor preview
+```
+
+**2. On component parameter passes** — via `translatableText` inside `inputValue`:
+```yaml
+# Parameter-level translation (per-instance, used when passing
+# translated strings to component parameters)
+paramIdentifier:
+  name: title
+  key: p1titl
+inputValue:
+  translatableText:
+    translationIdentifier:
+      key: ms01ttl1
+    textValue:
+      inputValue: Histamine / Low DAO    # English default
+```
+
+> **Important:** The `translatableText` wrapper is the correct way to pass translated strings as component parameters. Do NOT use `translationIdentifier` directly on the parameterPass (it will fail validation with "Unknown field name"). Instead, nest it inside `inputValue.translatableText`.
+
+---
+
 ## app-state.yaml
 
 **Purpose:** App-level state variables (global state accessible from any page/component).
@@ -1239,6 +1302,363 @@ parameters:                                # Template variables referenced in ho
 | Editing existing hooks | Works | Content and name changes are reflected. |
 | Hook name validation gap | Caution | The API accepts hook names with hyphens, but the FF editor rejects them as "Name contains invalid character." Use camelCase or spaces for names. |
 | XML content quoting | Caution | When hook content contains XML angle brackets (e.g., `<meta-data .../>`), wrap the content value in double quotes in the YAML to prevent parsing issues. |
+
+---
+
+## custom-file/id-INFO_PLIST
+
+**Purpose:** Allows injecting custom properties into the generated `Info.plist` for iOS builds, and defining template variables for dynamic values. Like `ANDROID_MANIFEST`, this is an abstraction layer — you define "hooks" (plist property injection) and "parameters" (template variables).
+
+> **This file only exists when it has content.** If all hooks and parameters are removed (via UI or API), the file disappears from the server (API returns 404). It reappears when a user adds a hook or parameter in the FF editor.
+
+> **WARNING: Pushing any `custom-file` deletes siblings.** The API treats all `custom-file/id-*` keys as a single collection. Pushing this file alone will delete all other custom files (MAIN, ANDROID_MANIFEST, PROGUARD, BUILD_GRADLE, etc.). **Always include all existing `custom-file` entries in the same push payload.** See [API Limitation #10](../flutterflow-api-limitations.md#10-pushing-one-custom-file-deletes-all-other-custom-file-entries).
+
+> **Important — this is NOT the Info.plist itself.**
+> This is FlutterFlow's configuration that controls **property injection into the generated Info.plist** at build time. The file only appears after a user adds at least one property in the FF editor (Settings > Custom Code > Custom Files > Info.plist).
+
+**Top-level keys:**
+- `type`
+- `identifier`
+- `hooks`
+- `parameters`
+
+### Hook Types
+
+Only one hook type:
+
+| Hook Type | Where it injects in Info.plist |
+|---|---|
+| `INFO_PLIST_PROPERTY` | Inside the root `<dict>` — use for adding `<key>`/`<value>` pairs (strings, booleans, arrays, etc.) |
+
+### Parameters (Template Variables)
+
+Same pattern as ANDROID_MANIFEST — parameters are template variables that can be referenced in hook `content` using `{{variableName}}` syntax. Values can come from literal input or environment variables.
+
+### Schema
+
+```yaml
+type: INFO_PLIST
+identifier:
+  name: Info.plist
+
+hooks:                                       # List of plist property injection hooks
+  - type: INFO_PLIST_PROPERTY                # Only hook type for Info.plist
+    identifier:
+      name: livetag                          # Human-readable hook name
+      key: gh2m0b                            # Unique 6-char alphanumeric key
+    content: "<key>live</key>\n<string>value</string>"  # Raw plist XML to inject
+
+parameters:                                  # Template variables
+  zini8l:                                    # Parameter key
+    parameter:
+      identifier:
+        name: fsdafd                         # Variable name — use {{fsdafd}} in hook content
+      dataType:
+        scalarType: String                   # Data type (String, Integer, etc.)
+    value:
+      inputValue:
+        serializedValue: safdsaf             # Literal value
+```
+
+**Key fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `type` | string | Always `INFO_PLIST` for this file. |
+| `identifier.name` | string | Always `Info.plist`. |
+| `hooks` | list | List of plist property injection hooks. Each hook injects a key-value pair into the root `<dict>`. |
+| `hooks[].type` | enum | Always `INFO_PLIST_PROPERTY`. |
+| `hooks[].identifier.name` | string | Human-readable hook name. |
+| `hooks[].identifier.key` | string | Unique 6-char alphanumeric key. |
+| `hooks[].content` | string | Raw plist XML to inject. Typically `<key>name</key>\n<string>value</string>` or similar plist entries. Must be properly escaped in YAML. |
+| `parameters` | map | Map of parameter key to parameter definition. |
+| `parameters.<key>.parameter.identifier.name` | string | Variable name. Referenced in hook `content` as `{{variableName}}`. |
+| `parameters.<key>.parameter.dataType.scalarType` | enum | Data type (`String`, `Integer`, `Double`, `Boolean`, etc.). |
+| `parameters.<key>.value` | object | Value source — either `inputValue.serializedValue` (literal) or `variable` (environment reference). |
+
+### Parameter value sources
+
+Parameters support two value sources:
+
+**Literal value:**
+```yaml
+value:
+  inputValue:
+    serializedValue: my-value              # Hardcoded value
+```
+
+**Environment variable reference:**
+```yaml
+value:
+  variable:
+    source: DEV_ENVIRONMENT
+    baseVariable:
+      environmentValue:
+        identifier:
+          name: myEnvVar                   # References environment-settings.yaml
+          key: eji5p6
+```
+
+### Hook content examples
+
+**Simple string property:**
+```yaml
+content: "<key>MyCustomKey</key>\n<string>MyCustomValue</string>"
+```
+
+**Boolean property:**
+```yaml
+content: "<key>MyFeatureFlag</key>\n<true/>"
+```
+
+**Array property:**
+```yaml
+content: "<key>LSApplicationQueriesSchemes</key>\n<array>\n  <string>myapp</string>\n  <string>myapp-dev</string>\n</array>"
+```
+
+**API capabilities:**
+
+| Operation | Status | Notes |
+|---|---|---|
+| Reading config | Works | Full hook and parameter data returned. |
+| Adding hooks via API | Expected to work | Same structure as ANDROID_MANIFEST hooks. |
+| Adding parameters via API | Expected to work | Same structure as other custom file parameters. |
+| Hook name validation gap | Caution | Same as ANDROID_MANIFEST — avoid hyphens in names, use camelCase or spaces. |
+
+### Code sub-file (`custom-file/id-INFO_PLIST/custom-file-code.dart`)
+
+Contains the full generated `Info.plist` XML. This is the complete plist including all standard iOS keys (bundle identifiers, permissions, URL schemes, etc.) plus any injected hook content. It is **read-only** — modifications should be made through the hooks/parameters config, not by editing the XML directly.
+
+---
+
+## custom-file/id-ENTITLEMENTS
+
+**Purpose:** Allows injecting custom entitlements into the generated `Runner.entitlements` file for iOS builds. Entitlements declare app capabilities such as push notifications, App Groups, iCloud, associated domains, and other iOS-specific permissions.
+
+> **This file only exists when it has content.** If all hooks and parameters are removed (via UI or API), the file disappears from the server (API returns 404). It reappears when a user adds an entitlement or parameter in the FF editor.
+
+> **WARNING: Pushing any `custom-file` deletes siblings.** The API treats all `custom-file/id-*` keys as a single collection. Pushing this file alone will delete all other custom files (MAIN, ANDROID_MANIFEST, INFO_PLIST, etc.). **Always include all existing `custom-file` entries in the same push payload.** See [API Limitation #10](../flutterflow-api-limitations.md#10-pushing-one-custom-file-deletes-all-other-custom-file-entries).
+
+> **Important — this is an abstraction layer.**
+> This config controls **entitlement injection into the generated `Runner.entitlements`** at build time. The file only appears after a user adds at least one entitlement in the FF editor (Settings > Custom Code > Custom Files > Runner.entitlements).
+
+**Top-level keys:**
+- `type`
+- `identifier`
+- `hooks`
+- `parameters`
+
+### Hook Types
+
+Only one hook type:
+
+| Hook Type | Where it injects in Runner.entitlements |
+|---|---|
+| `ENTITLEMENT` | Inside the root `<dict>` of the entitlements plist — use for adding capability key-value pairs |
+
+### Schema
+
+```yaml
+type: ENTITLEMENTS
+identifier:
+  name: Runner.entitlements
+
+hooks:
+  - type: ENTITLEMENT                            # Only hook type for entitlements
+    identifier:
+      name: environemnt                          # Human-readable hook name
+      key: 5x527x                               # Unique 6-char alphanumeric key
+    content: "<key>aps-environment</key>\n<string>development</string>"  # Plist XML to inject
+
+parameters:                                      # Template variables — same as all other custom files
+  f4cahu:
+    parameter:
+      identifier:
+        name: variable1                          # Variable name — use {{variable1}} in hook content
+      dataType:
+        scalarType: String
+    value:
+      inputValue:
+        serializedValue: clear value             # Default value
+```
+
+**Key fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `type` | string | Always `ENTITLEMENTS` for this file. |
+| `identifier.name` | string | Always `Runner.entitlements`. |
+| `hooks` | list | List of entitlement injection hooks. Each hook injects a capability key-value pair into the entitlements plist. |
+| `hooks[].type` | enum | Always `ENTITLEMENT`. |
+| `hooks[].identifier.name` | string | Human-readable name for the entitlement. |
+| `hooks[].identifier.key` | string | Unique 6-char alphanumeric key. |
+| `hooks[].content` | string | Raw plist XML to inject. Typically `<key>capability-name</key>` followed by a value (`<string>`, `<true/>`, `<array>`, etc.). Must be properly escaped in YAML. |
+| `parameters` | map | Template variables keyed by parameter ID. Use `{{variableName}}` in `content` to reference them. Same structure as all other custom files. |
+
+### Common entitlement content examples
+
+**Push notifications (development):**
+```yaml
+content: "<key>aps-environment</key>\n<string>development</string>"
+```
+
+**Push notifications (production):**
+```yaml
+content: "<key>aps-environment</key>\n<string>production</string>"
+```
+
+**Associated domains (for universal links):**
+```yaml
+content: "<key>com.apple.developer.associated-domains</key>\n<array>\n  <string>applinks:example.com</string>\n</array>"
+```
+
+**App Groups:**
+```yaml
+content: "<key>com.apple.security.application-groups</key>\n<array>\n  <string>group.com.example.myapp</string>\n</array>"
+```
+
+### API capabilities
+
+| Operation | Status | Notes |
+|---|---|---|
+| Reading config | Works | Full hook and parameter data returned. |
+| Adding hooks via API | Expected to work | Same structure as other custom file hooks. |
+| Adding parameters via API | Expected to work | Same structure as other custom file parameters. |
+| Hook name validation gap | Caution | Same as other custom files — avoid hyphens in names, use camelCase or spaces. |
+
+---
+
+## custom-file/id-APP_DELEGATE
+
+**Purpose:** Allows injecting custom Swift code into the generated `AppDelegate.swift` for iOS builds. Supports import statements and initialization code that runs during the iOS app launch sequence.
+
+> **This file only exists when it has content.** If all hooks and parameters are removed (via UI or API), the file disappears from the server (API returns 404). It reappears when a user adds a hook or parameter in the FF editor.
+
+> **WARNING: Pushing any `custom-file` deletes siblings.** The API treats all `custom-file/id-*` keys as a single collection. Pushing this file alone will delete all other custom files (MAIN, ANDROID_MANIFEST, INFO_PLIST, etc.). **Always include all existing `custom-file` entries in the same push payload.** See [API Limitation #10](../flutterflow-api-limitations.md#10-pushing-one-custom-file-deletes-all-other-custom-file-entries).
+
+> **Important — this is an abstraction layer.**
+> This config controls **Swift code injection into the generated `AppDelegate.swift`** at build time. The file only appears after a user adds at least one hook in the FF editor (Settings > Custom Code > Custom Files > AppDelegate.swift).
+
+**Top-level keys:**
+- `type`
+- `identifier`
+- `hooks`
+- `parameters`
+
+### Hook Types
+
+Two hook types control where Swift code is injected in the generated `AppDelegate.swift`:
+
+| Hook Type | Where it injects in AppDelegate.swift |
+|---|---|
+| `APP_DELEGATE_IMPORT_HOOK` | At the top of the file — use for `import` statements |
+| `APP_DELEGATE_INITIALIZATION_HOOK` | Inside `application(_:didFinishLaunchingWithOptions:)` — use for SDK init calls and setup code |
+
+### Schema
+
+```yaml
+type: APP_DELEGATE
+identifier:
+  name: AppDelegate.swift
+
+hooks:
+  - type: APP_DELEGATE_IMPORT_HOOK               # Injects at the top of the file (imports)
+    identifier:
+      name: UIkitimprot                          # Human-readable hook name
+      key: rtmoen                                # Unique 6-char alphanumeric key
+    content: import UIKit                        # Swift import statement
+
+  - type: APP_DELEGATE_INITIALIZATION_HOOK       # Injects inside didFinishLaunchingWithOptions
+    identifier:
+      name: logsinit                             # Human-readable hook name
+      key: 2b582i                                # Unique 6-char alphanumeric key
+    content: Logs.init()                         # Swift initialization code
+
+parameters:                                      # Template variables — same as all other custom files
+  74q7xg:
+    parameter:
+      identifier:
+        name: vars1                              # Variable name — use {{vars1}} in hook content
+      dataType:
+        scalarType: String
+    value:
+      inputValue:
+        serializedValue: var val                 # Default value
+```
+
+**Key fields:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `type` | string | Always `APP_DELEGATE` for this file. |
+| `identifier.name` | string | Always `AppDelegate.swift`. |
+| `hooks` | list | List of Swift code injection hooks. |
+| `hooks[].type` | enum | `APP_DELEGATE_IMPORT_HOOK` (imports) or `APP_DELEGATE_INITIALIZATION_HOOK` (init code). |
+| `hooks[].identifier.name` | string | Human-readable name for the hook. |
+| `hooks[].identifier.key` | string | Unique 6-char alphanumeric key. |
+| `hooks[].content` | string | Raw Swift code to inject. For imports: a single `import` statement. For initialization: Swift code that runs during app launch. |
+| `parameters` | map | Template variables keyed by parameter ID. Use `{{variableName}}` in `content` to reference them. Same structure as all other custom files. |
+
+### Generated AppDelegate execution order
+
+The generated `AppDelegate.swift` follows this structure:
+
+```
+1.  import Flutter                              ← Standard Flutter import
+2.  import UIKit                                ← APP_DELEGATE_IMPORT_HOOK entries
+3.  import MySDK                                ← APP_DELEGATE_IMPORT_HOOK entries
+4.
+5.  @UIApplicationMain
+6.  class AppDelegate: FlutterAppDelegate {
+7.    override func application(...) -> Bool {
+8.      GeneratedPluginRegistrant.register(with: self)
+9.      Logs.init()                              ← APP_DELEGATE_INITIALIZATION_HOOK entries
+10.     MySDK.configure()                        ← APP_DELEGATE_INITIALIZATION_HOOK entries
+11.     return super.application(...)
+12.   }
+13. }
+```
+
+- **Import hooks** are placed at the top of the file alongside the standard Flutter/UIKit imports.
+- **Initialization hooks** are placed inside `application(_:didFinishLaunchingWithOptions:)` after plugin registration but before the `return` statement.
+
+### Common hook content examples
+
+**Import a framework:**
+```yaml
+- type: APP_DELEGATE_IMPORT_HOOK
+  identifier:
+    name: firebaseImport
+    key: abc123
+  content: import Firebase
+```
+
+**Initialize an SDK:**
+```yaml
+- type: APP_DELEGATE_INITIALIZATION_HOOK
+  identifier:
+    name: firebaseInit
+    key: def456
+  content: FirebaseApp.configure()
+```
+
+**Multi-line initialization:**
+```yaml
+- type: APP_DELEGATE_INITIALIZATION_HOOK
+  identifier:
+    name: oneSignalSetup
+    key: ghi789
+  content: "OneSignal.initialize(\"{{appId}}\")\nOneSignal.Notifications.requestPermission({ accepted in })"
+```
+
+### API capabilities
+
+| Operation | Status | Notes |
+|---|---|---|
+| Reading config | Works | Full hook and parameter data returned. |
+| Adding hooks via API | Expected to work | Same structure as other custom file hooks. |
+| Adding parameters via API | Expected to work | Same structure as other custom file parameters. |
+| Hook name validation gap | Caution | Same as other custom files — avoid hyphens in names, use camelCase or spaces. |
 
 ---
 

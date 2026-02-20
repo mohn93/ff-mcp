@@ -1,6 +1,6 @@
 # Custom Code
 
-FlutterFlow supports four types of custom code: **Custom Actions** (async Dart functions with side effects), **Custom Functions** (pure synchronous Dart functions), **Custom Widgets** (Flutter widgets with parameters), and **AI Agents** (LLM-powered processing pipelines). Additionally, **App Action Components** provide reusable action chains that can be invoked from any page, and **Custom Files** allow overriding special project-level files like `main.dart` and `AndroidManifest.xml`.
+FlutterFlow supports four types of custom code: **Custom Actions** (async Dart functions with side effects), **Custom Functions** (pure synchronous Dart functions), **Custom Widgets** (Flutter widgets with parameters), and **AI Agents** (LLM-powered processing pipelines). Additionally, **App Action Components** provide reusable action chains that can be invoked from any page, and **Custom Files** allow overriding special project-level files like `main.dart`, `AndroidManifest.xml`, `Info.plist`, `proguard-rules.pro`, and `build.gradle`.
 
 ---
 
@@ -706,76 +706,21 @@ variable:
 
 ## Custom Files
 
-Custom Files are special project-level files such as `main.dart` (the app entry point) and `AndroidManifest.xml`. Each has a metadata YAML file and a companion code file. They live under `custom-file/`.
+Custom Files are special project-level files that override platform-specific configuration (e.g., `main.dart`, `AndroidManifest.xml`, `Info.plist`, `proguard-rules.pro`, `build.gradle`). Each has a metadata YAML file and a companion code file under `custom-file/`.
 
-### File layout
+> **Full documentation:** Custom Files are documented in detail in [01-project-files.md](01-project-files.md) under the `custom-file/id-*` sections, since they are project-level configuration files. See those sections for complete schemas, hook types, parameters, API capabilities, and warnings.
 
-```
-custom-file/
-  id-MAIN.yaml                              # Metadata for main.dart
-  id-MAIN/custom-file-code.dart.yaml        # main.dart Dart code
-  id-ANDROID_MANIFEST.yaml                  # Metadata for AndroidManifest.xml
-  id-ANDROID_MANIFEST/custom-file-code.dart.yaml  # AndroidManifest.xml content
-```
+### Quick reference
 
-### MAIN metadata (id-MAIN.yaml)
-
-```yaml
-type: MAIN
-isUnlocked: false
-actions:
-  - type: FINAL_ACTION
-    identifier:
-      name: initializeUlink
-      key: t6snt
-      projectId: ulink-21sajt
-description: ""
-```
-
-### ANDROID_MANIFEST metadata (id-ANDROID_MANIFEST.yaml)
-
-```yaml
-type: ANDROID_MANIFEST
-identifier:
-  name: AndroidManifest.xml
-isUnlocked: true
-parameters:
-  29c3b7b9-afe7-4429-9d20-abb2e09f7a40:
-    parameter:
-      identifier:
-        name: ulinkDomain
-      dataType:
-        scalarType: String
-    value:
-      variable:
-        source: DEV_ENVIRONMENT
-        baseVariable:
-          environmentValue:
-            identifier:
-              name: ulinkDomain
-              key: eji5p6
-description: ""
-```
-
-### Definition fields
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| `type` | Yes | File type: `MAIN` or `ANDROID_MANIFEST` |
-| `identifier` | For ANDROID_MANIFEST | `name` of the file |
-| `isUnlocked` | No | Whether the file is editable (default: false) |
-| `actions` | No | List of final actions (library initializers) that run at startup |
-| `parameters` | No | Template parameter substitutions for the code file |
-| `description` | No | Human-readable description |
-
-### Code files
-
-- **MAIN:** `custom-file/id-MAIN/custom-file-code.dart.yaml` contains the full `main.dart` with imports, `main()` function, Firebase/Supabase initialization, and library init calls.
-- **ANDROID_MANIFEST:** `custom-file/id-ANDROID_MANIFEST/custom-file-code.dart.yaml` contains the XML manifest with template placeholders (e.g., `{{unlinkDomain}}`, `{{ulink-21sajt.ulinkSchema}}`). Parameters in metadata map to these placeholders.
-
-### Parameter substitution
-
-Parameters in ANDROID_MANIFEST metadata define template variables. Each key is a UUID, and the value specifies where the parameter's value comes from (typically `DEV_ENVIRONMENT`). These get substituted into the code file's template placeholders at build time.
+| Type | File key | Description |
+|------|----------|-------------|
+| `MAIN` | `custom-file/id-MAIN` | App entry point (`main.dart`) — lifecycle actions (INITIAL/FINAL) |
+| `ANDROID_MANIFEST` | `custom-file/id-ANDROID_MANIFEST` | Android manifest — XML injection hooks, template parameters |
+| `INFO_PLIST` | `custom-file/id-INFO_PLIST` | iOS Info.plist — property injection hooks, template parameters |
+| `ENTITLEMENTS` | `custom-file/id-ENTITLEMENTS` | iOS Runner.entitlements — capability entitlement injection |
+| `APP_DELEGATE` | `custom-file/id-APP_DELEGATE` | iOS AppDelegate.swift — import and initialization code injection |
+| `PROGUARD` | `custom-file/id-PROGUARD` | ProGuard rules — rule injection hooks |
+| `BUILD_GRADLE` | `custom-file/id-BUILD_GRADLE` | Gradle config — plugin/dependency/repository injection hooks |
 
 ---
 
@@ -788,4 +733,4 @@ Parameters in ANDROID_MANIFEST metadata define template variables. Each key is a
 | Custom Widget | `custom-widgets/id-<key>.yaml` | (code embedded or separate) | `custom-widgets/` |
 | AI Agent | `agent/id-<key>.yaml` | N/A (no code file) | `agent/` |
 | App Action Component | `app-action-components/id-<key>.yaml` | N/A (actions are inline) | `app-action-components/` |
-| Custom File | `custom-file/id-<TYPE>.yaml` | `custom-file/id-<TYPE>/custom-file-code.dart.yaml` | `custom-file/` |
+| Custom File | `custom-file/id-<TYPE>` | `custom-file/id-<TYPE>/custom-file-code.dart` | `custom-file/` |

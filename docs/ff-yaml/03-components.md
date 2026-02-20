@@ -335,6 +335,26 @@ widgetProperty:
         inputValue: 460
 ```
 
+**Translatable text (i18n):**
+
+Use `translatableText` inside `inputValue` to pass a string that should be translated at runtime based on the app's current locale. This is the correct way to make component parameter text translatable.
+
+```yaml
+paramIdentifier:
+  name: title
+  key: p1titl
+inputValue:
+  translatableText:
+    translationIdentifier:
+      key: ms01ttl1              # References languages/translation/id-ms01ttl1
+    textValue:
+      inputValue: Histamine / Low DAO   # English default / editor preview
+```
+
+Each `translationIdentifier.key` must have a corresponding `languages/translation/id-<key>` file with translations for all supported languages (see `01-project-files.md` for the translation file schema).
+
+> **Note:** `translationIdentifier` is NOT valid as a direct sibling of `paramIdentifier` on a parameterPass — it must be nested inside `inputValue.translatableText`. Placing it at the wrong level causes a validation error.
+
 ---
 
 ## 7. isDummyRoot

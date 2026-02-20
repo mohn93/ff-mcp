@@ -36,7 +36,7 @@ Every FlutterFlow project is a collection of YAML files accessed via file keys. 
 | `enums/id-XXX` | Enum definition with named values |
 | `collections/id-XXX` | Firestore collection schema: fields, types, subcollections |
 | `agent/id-XXX` | AI agent configuration |
-| `custom-file/id-<TYPE>` | Custom file configs for native platform files. Known types: `MAIN` (main.dart startup actions), `ANDROID_MANIFEST` (XML injection hooks for AndroidManifest.xml), `PROGUARD` (ProGuard rule injection for proguard-rules.pro), `BUILD_GRADLE` (Gradle plugin/dependency/repository injection for build.gradle). Only appear after enabled in FF editor. Sub-file `custom-file/id-MAIN/custom-file-code.dart` contains generated Dart source. |
+| `custom-file/id-<TYPE>` | Custom file configs for native platform files. Known types: `MAIN` (main.dart startup actions), `ANDROID_MANIFEST` (XML injection hooks for AndroidManifest.xml), `INFO_PLIST` (plist property injection for Info.plist), `ENTITLEMENTS` (iOS capability entitlements for Runner.entitlements), `APP_DELEGATE` (Swift code injection for AppDelegate.swift), `PROGUARD` (ProGuard rule injection for proguard-rules.pro), `BUILD_GRADLE` (Gradle plugin/dependency/repository injection for build.gradle). Only appear after enabled in FF editor. Sub-file `custom-file/id-<TYPE>/custom-file-code.dart` contains generated source. |
 | `environment-settings` | Per-environment configuration values (API URLs, keys) |
 | `dependencies` | FlutterFlow library package dependencies |
 | `custom-code-dependencies` | Dart/Flutter pub dependencies for custom code |
