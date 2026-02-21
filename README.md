@@ -263,9 +263,19 @@ This MCP ships with a comprehensive FlutterFlow YAML reference catalog that AI m
 
 See [docs/ff-yaml/](docs/ff-yaml/) for the full catalog.
 
+## AI Agent Skill
+
+This MCP includes a [skills.sh](https://skills.sh)-compatible skill for AI agents. Install it to teach your AI assistant how to use FlutterFlow MCP effectively:
+
+```bash
+npx skills add mohn93/ff-mcp --skill flutterflow-mcp
+```
+
+Compatible with Claude Code, Cursor, GitHub Copilot, Codex, Goose, Windsurf, and 12+ other AI agents. The skill provides tool orchestration workflows, critical YAML rules, and detailed reference documentation for widgets, actions, data binding, theming, and more.
+
 ## Claude Code Skills
 
-Copy skills from [`skills/`](skills/) into your project's `.claude/skills/` directory:
+You can also copy Claude Code-specific skills from [`skills/`](skills/) into your project's `.claude/skills/` directory:
 
 - **`ff-yaml-dev.md`** — Core workflow: reading, editing, and creating FlutterFlow pages/components
 - **`ff-widget-patterns.md`** — Quick reference for common widget YAML patterns and snippets
