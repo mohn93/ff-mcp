@@ -14,9 +14,24 @@ metadata:
   version: "1.0"
 ---
 
+## Prerequisites
+
+This skill requires the **flutterflow-mcp** MCP server to be installed and connected. Before proceeding, check if the `list_projects` tool is available. If not, the user needs to set up the MCP server first:
+
+1. Get a FlutterFlow API token from **FlutterFlow > Profile > Account Settings > API Token** (requires a paid FlutterFlow subscription)
+2. Add the MCP server to your AI client:
+   ```bash
+   # Claude Code
+   claude mcp add flutterflow -e FLUTTERFLOW_API_TOKEN=<token> -- npx -y flutterflow-mcp
+
+   # Other clients (Claude Desktop, Cursor, Windsurf) — add to MCP config:
+   # { "command": "npx", "args": ["-y", "flutterflow-mcp"], "env": { "FLUTTERFLOW_API_TOKEN": "<token>" } }
+   ```
+3. Restart your AI client, then verify by calling `list_projects`
+
 ## Overview
 
-The FlutterFlow MCP provides 25 tools for reading, inspecting, and editing FlutterFlow projects through YAML. It connects AI assistants to the FlutterFlow Project API, enabling programmatic access to pages, components, themes, actions, data models, and settings. All project data is represented as YAML files that can be fetched, cached locally, validated, and pushed back. For setup instructions and environment configuration, see the project README.
+The FlutterFlow MCP provides 25 tools for reading, inspecting, and editing FlutterFlow projects through YAML. It connects AI assistants to the FlutterFlow Project API, enabling programmatic access to pages, components, themes, actions, data models, and settings. All project data is represented as YAML files that can be fetched, cached locally, validated, and pushed back.
 
 ## Tool Catalog
 
