@@ -27,9 +27,11 @@ describe("list_projects tool", () => {
     const result = await handler({});
 
     expect(mockClient.listProjects).toHaveBeenCalledWith(undefined);
-    expect(result.content).toHaveLength(1);
+    expect(result.content).toHaveLength(2);
     expect(result.content[0].type).toBe("text");
     expect(JSON.parse(result.content[0].text)).toEqual(fakeResult);
+    expect(result.content[1].type).toBe("text");
+    expect(result.content[1].text).toContain("Tip:");
   });
 
   it("passes project_type filter to client.listProjects", async () => {
