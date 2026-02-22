@@ -1,5 +1,5 @@
 ---
-name: flutterflow-mcp
+name: community-ff-mcp
 description: >
   Teaches AI assistants how to develop FlutterFlow apps using MCP tools.
   Use this skill when working with FlutterFlow projects, editing FF YAML,
@@ -8,7 +8,7 @@ description: >
   discovery, reading, editing, and settings. Triggers on: FlutterFlow,
   FF YAML, FF page, FF component, FF widget, FF theme, FF project.
 license: MIT
-compatibility: Requires the flutterflow-mcp MCP server to be connected and a valid FLUTTERFLOW_API_TOKEN environment variable.
+compatibility: Requires the community-ff-mcp MCP server to be connected and a valid FLUTTERFLOW_API_TOKEN environment variable.
 metadata:
   author: mohn93
   version: "1.0"
@@ -16,16 +16,16 @@ metadata:
 
 ## Prerequisites
 
-This skill requires the **flutterflow-mcp** MCP server to be installed and connected. Before proceeding, check if the `list_projects` tool is available. If not, the user needs to set up the MCP server first:
+This skill requires the **community-ff-mcp** MCP server to be installed and connected. Before proceeding, check if the `list_projects` tool is available. If not, the user needs to set up the MCP server first:
 
 1. Get a FlutterFlow API token from **FlutterFlow > Profile > Account Settings > API Token** (requires a paid FlutterFlow subscription)
 2. Add the MCP server to your AI client:
    ```bash
    # Claude Code
-   claude mcp add flutterflow -e FLUTTERFLOW_API_TOKEN=<token> -- npx -y flutterflow-mcp
+   claude mcp add flutterflow -e FLUTTERFLOW_API_TOKEN=<token> -- npx -y community-ff-mcp
 
    # Other clients (Claude Desktop, Cursor, Windsurf) — add to MCP config:
-   # { "command": "npx", "args": ["-y", "flutterflow-mcp"], "env": { "FLUTTERFLOW_API_TOKEN": "<token>" } }
+   # { "command": "npx", "args": ["-y", "community-ff-mcp"], "env": { "FLUTTERFLOW_API_TOKEN": "<token>" } }
    ```
 3. Restart your AI client, then verify by calling `list_projects`
 

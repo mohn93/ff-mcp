@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-An MCP (Model Context Protocol) server that wraps the FlutterFlow Project API, enabling AI-assisted FlutterFlow development. Published to npm as `flutterflow-mcp`. It exposes tools, resources, and prompts over stdio transport.
+An MCP (Model Context Protocol) server that wraps the FlutterFlow Project API, enabling AI-assisted FlutterFlow development. Published to npm as `community-ff-mcp`. It exposes tools, resources, and prompts over stdio transport.
 
 ## Build & Run
 

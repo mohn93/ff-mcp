@@ -1,4 +1,4 @@
-# flutterflow-mcp
+# community-ff-mcp
 
 MCP server for the FlutterFlow Project API. Enables AI-assisted FlutterFlow development through Claude and other MCP-compatible clients.
 
@@ -40,7 +40,7 @@ Choose your AI client below and follow the setup instructions.
 Run this command to add the MCP server:
 
 ```bash
-claude mcp add flutterflow -e FLUTTERFLOW_API_TOKEN=your_token_here -- npx -y flutterflow-mcp
+claude mcp add flutterflow -e FLUTTERFLOW_API_TOKEN=your_token_here -- npx -y community-ff-mcp
 ```
 
 Replace `your_token_here` with the token you copied in step 1.
@@ -52,7 +52,7 @@ This adds the server to your project's `.claude/settings.json`. You can also man
   "mcpServers": {
     "flutterflow": {
       "command": "npx",
-      "args": ["-y", "flutterflow-mcp"],
+      "args": ["-y", "community-ff-mcp"],
       "env": {
         "FLUTTERFLOW_API_TOKEN": "your_token_here"
       }
@@ -73,7 +73,7 @@ Open **Settings > Developer > Edit Config** and add:
   "mcpServers": {
     "flutterflow": {
       "command": "npx",
-      "args": ["-y", "flutterflow-mcp"],
+      "args": ["-y", "community-ff-mcp"],
       "env": {
         "FLUTTERFLOW_API_TOKEN": "your_token_here"
       }
@@ -96,7 +96,7 @@ Open **Settings > MCP** and add a new server with this configuration:
   "mcpServers": {
     "flutterflow": {
       "command": "npx",
-      "args": ["-y", "flutterflow-mcp"],
+      "args": ["-y", "community-ff-mcp"],
       "env": {
         "FLUTTERFLOW_API_TOKEN": "your_token_here"
       }
@@ -117,7 +117,7 @@ Add the following to your MCP configuration file (check your client's docs for t
   "mcpServers": {
     "flutterflow": {
       "command": "npx",
-      "args": ["-y", "flutterflow-mcp"],
+      "args": ["-y", "community-ff-mcp"],
       "env": {
         "FLUTTERFLOW_API_TOKEN": "your_token_here"
       }
@@ -268,7 +268,7 @@ See [docs/ff-yaml/](docs/ff-yaml/) for the full catalog.
 This MCP includes a [skills.sh](https://skills.sh)-compatible skill for AI agents. Install it to teach your AI assistant how to use FlutterFlow MCP effectively:
 
 ```bash
-npx skills add mohn93/ff-mcp --skill flutterflow-mcp
+npx skills add mohn93/ff-mcp --skill community-ff-mcp
 ```
 
 Compatible with Claude Code, Cursor, GitHub Copilot, Codex, Goose, Windsurf, and 12+ other AI agents. The skill provides tool orchestration workflows, critical YAML rules, and detailed reference documentation for widgets, actions, data binding, theming, and more.
