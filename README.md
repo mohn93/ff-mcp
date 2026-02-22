@@ -1,5 +1,7 @@
 # community-ff-mcp
 
+> **Disclaimer:** This is an unofficial, community-built project. It is not affiliated with, endorsed by, or sponsored by FlutterFlow. "FlutterFlow" is a trademark of Google LLC. This project uses the FlutterFlow public API.
+
 MCP server for the FlutterFlow Project API. Enables AI-assisted FlutterFlow development through Claude and other MCP-compatible clients.
 
 ## What This MCP Does Best
