@@ -267,13 +267,33 @@ See [docs/ff-yaml/](docs/ff-yaml/) for the full catalog.
 
 ## AI Agent Skill
 
-This MCP includes a [skills.sh](https://skills.sh)-compatible skill for AI agents. Install it to teach your AI assistant how to use FlutterFlow MCP effectively:
+This MCP includes a [skills.sh](https://skills.sh)-compatible skill that teaches AI assistants how to use FlutterFlow MCP effectively. The skill provides tool orchestration workflows, critical YAML rules, and reference documentation for widgets, actions, data binding, theming, and more.
+
+### Install the Skill
 
 ```bash
 npx skills add mohn93/ff-mcp --skill community-ff-mcp
 ```
 
-Compatible with Claude Code, Cursor, GitHub Copilot, Codex, Goose, Windsurf, and 12+ other AI agents. The skill provides tool orchestration workflows, critical YAML rules, and detailed reference documentation for widgets, actions, data binding, theming, and more.
+This works with **18+ AI agents** including Claude Code, Cursor, GitHub Copilot, Codex, Goose, Windsurf, and more. The `skills` CLI auto-detects your AI tool and installs the skill to the correct location.
+
+### What the Skill Teaches Your AI
+
+Once installed, your AI assistant will know how to:
+
+- **Discover** — List projects, pages, components, and search project files
+- **Read** — Summarize pages/components, trace component usages, inspect navigations
+- **Edit** — Follow the correct read → guide → edit → validate → push workflow
+- **Configure** — Read theme, app state, API endpoints, data models, and integrations
+
+### Skill + MCP Setup
+
+The skill and the MCP server are installed separately:
+
+1. **MCP server** gives the AI the tools (see [Quick Start](#quick-start) above)
+2. **Skill** teaches the AI *how* to use those tools effectively
+
+If the skill detects the MCP tools aren't connected, it will guide the user through setup automatically.
 
 ## Claude Code Skills
 
